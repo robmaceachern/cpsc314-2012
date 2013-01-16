@@ -1,0 +1,223 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		44144920169F765E009B6190 /* cs314_p1.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4414491F169F765E009B6190 /* cs314_p1.1 */; };
+		44144929169F7672009B6190 /* p1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 44144927169F7672009B6190 /* p1.cpp */; };
+		4414492B169F76B9009B6190 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4414492A169F76B9009B6190 /* OpenGL.framework */; };
+		4414492D169F76BD009B6190 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4414492C169F76BD009B6190 /* GLUT.framework */; };
+		44EE6D6B16A45F5100A7E399 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 44EE6D6A16A45F5100A7E399 /* Makefile */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		44144917169F765E009B6190 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				44144920169F765E009B6190 /* cs314_p1.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		44144919169F765E009B6190 /* cs314 p1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "cs314 p1"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4414491F169F765E009B6190 /* cs314_p1.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = cs314_p1.1; sourceTree = "<group>"; };
+		44144927169F7672009B6190 /* p1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = p1.cpp; sourceTree = "<group>"; };
+		4414492A169F76B9009B6190 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		4414492C169F76BD009B6190 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
+		44EE6D6A16A45F5100A7E399 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; name = Makefile; path = "cs314 p1/Makefile"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		44144916169F765E009B6190 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4414492D169F76BD009B6190 /* GLUT.framework in Frameworks */,
+				4414492B169F76B9009B6190 /* OpenGL.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4414490E169F765E009B6190 = {
+			isa = PBXGroup;
+			children = (
+				4414492C169F76BD009B6190 /* GLUT.framework */,
+				4414492A169F76B9009B6190 /* OpenGL.framework */,
+				4414491C169F765E009B6190 /* cs314 p1 */,
+				4414491A169F765E009B6190 /* Products */,
+				44EE6D6A16A45F5100A7E399 /* Makefile */,
+			);
+			sourceTree = "<group>";
+		};
+		4414491A169F765E009B6190 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				44144919169F765E009B6190 /* cs314 p1 */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4414491C169F765E009B6190 /* cs314 p1 */ = {
+			isa = PBXGroup;
+			children = (
+				44144927169F7672009B6190 /* p1.cpp */,
+				4414491F169F765E009B6190 /* cs314_p1.1 */,
+			);
+			path = "cs314 p1";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		44144918169F765E009B6190 /* cs314 p1 */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 44144923169F765E009B6190 /* Build configuration list for PBXNativeTarget "cs314 p1" */;
+			buildPhases = (
+				44144915169F765E009B6190 /* Sources */,
+				44144916169F765E009B6190 /* Frameworks */,
+				44144917169F765E009B6190 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "cs314 p1";
+			productName = "cs314 p1";
+			productReference = 44144919169F765E009B6190 /* cs314 p1 */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		44144910169F765E009B6190 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0430;
+			};
+			buildConfigurationList = 44144913169F765E009B6190 /* Build configuration list for PBXProject "cs314 p1" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 4414490E169F765E009B6190;
+			productRefGroup = 4414491A169F765E009B6190 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				44144918169F765E009B6190 /* cs314 p1 */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		44144915169F765E009B6190 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				44144929169F7672009B6190 /* p1.cpp in Sources */,
+				44EE6D6B16A45F5100A7E399 /* Makefile in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		44144921169F765E009B6190 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		44144922169F765E009B6190 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		44144924169F765E009B6190 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		44144925169F765E009B6190 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		44144913169F765E009B6190 /* Build configuration list for PBXProject "cs314 p1" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				44144921169F765E009B6190 /* Debug */,
+				44144922169F765E009B6190 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		44144923169F765E009B6190 /* Build configuration list for PBXNativeTarget "cs314 p1" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				44144924169F765E009B6190 /* Debug */,
+				44144925169F765E009B6190 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 44144910169F765E009B6190 /* Project object */;
+}
