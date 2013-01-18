@@ -13,8 +13,8 @@ void drawFloor();
 unsigned char camera = 'r';
 
 int iCount = 0;       // used for numbering the PPM image files
-int Width = 400;      // window width (pixels)
-int Height = 400;     // window height (pixels)
+int Width = 800;      // window width (pixels)
+int Height = 800;     // window height (pixels)
 bool Dump=false;      // flag set to true when dumping animation frames
 int rotation = 0;
 
@@ -76,7 +76,7 @@ void displayCallback()
     
     glMatrixMode( GL_MODELVIEW );
     glLoadIdentity();
-    glTranslatef( 0.0, 0.0, -10.0 );
+    glTranslatef( 0.0, -3.0, -10.0 );
     switch (camera) {
         case 'p':
             glRotatef( 180, 0.0, 1.0, 0.0 );
@@ -94,7 +94,7 @@ void displayCallback()
             glRotatef( -90, 1.0, 0.0, 0.0 );
             break;
         case 'm':
-            rotation = (rotation + 5) % 360;
+            rotation = (rotation + 10) % 360;
             glRotatef( rotation, 0.0, 1.0, 0.0 );
             break;
         case 'r':
@@ -106,7 +106,47 @@ void displayCallback()
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     // Draw your rabbit here
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    glutSolidCube(0.5);
+        
+    glPushMatrix(); // start rabbit
+
+    glColor3f(1, 1, 1);
+    
+    glPushMatrix(); // start torso
+
+    glScalef(3, 2, 1.5);
+    glTranslatef(0, 0.8, 0);
+    glutSolidCube(1);
+    
+    glPopMatrix();  // end torso
+        
+    glPushMatrix(); // start tail
+    
+    glTranslatef(1.5, 2.2, 0);
+    glScalef(0.5, 0.7, 0.7);
+    glutSolidCube(1);
+    glTranslatef(0.5, 0, 0);
+    glScalef(0.55, 0.7, 0.7);
+    glutSolidCube(1);
+    
+    glPopMatrix();  // end tail
+    
+    glPushMatrix(); // start head
+    
+    glTranslatef(-2.0, 3, 0);
+    glScalef(1, 1.2, 0.7);
+    glutSolidCube(1);
+    
+    glColor3f(0.5, 0.5, 0.5);
+    glScalef(0.1, 0.2, 0.4);
+    glTranslatef(-5, 1.2, -0.7);
+    glutSolidCube(1);
+    
+    glTranslatef(0, 0, 1.4);
+    glutSolidCube(1);
+    
+    glPopMatrix();  // end head
+    
+    glPopMatrix(); // end rabbit
     
     // draw after the opaque objects, since it is translucent
     drawFloor();
@@ -220,7 +260,7 @@ int main(int argc, char **argv)
 {
     // create window and rendering context
     glutInit( &argc, argv );
-    glutInitDisplayMode( GLUT_DEPTH | GLUT_RGB | GLUT_DOUBLE );
+    glutInitDisplayMode( GLUT_DEPTH | GLUT_RGB | GLUT_DOUBLE | GLUT_MULTISAMPLE );
     glutInitWindowSize( Width, Height );
     glutCreateWindow( "Rabbit" );
     
