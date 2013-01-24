@@ -106,13 +106,40 @@ void displayCallback()
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     // Draw your rabbit here
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    
+//    // testing...
+//    glPushMatrix();
+//    
+//    glLoadIdentity();
+//    
+//    glTranslatef(1, 1, 0);
+//    glRotatef(90, 1, 0, 0);
+//    glPushMatrix();
+//    glScalef(1, 2, 1);
+//    glTranslatef(1, 1, 0);
+//    
+//    glPopMatrix();
+//    glTranslatef(1, 1, 0);
+//    
+//    
+//    GLfloat matrix[16];
+//    glGetFloatv (GL_MODELVIEW_MATRIX, matrix);
+//    
+//    // http://stackoverflow.com/questions/4360918/correct-opengl-matrix-format
+//    printf("%f %f %f %f \n", matrix[0], matrix[4], matrix[8], matrix[12]);
+//    printf("%f %f %f %f \n", matrix[1], matrix[5], matrix[9], matrix[13]);
+//    printf("%f %f %f %f \n", matrix[2], matrix[6], matrix[10], matrix[14]);
+//    printf("%f %f %f %f \n", matrix[3], matrix[7], matrix[11], matrix[15]);
+//    
+//    glPopMatrix(); // end testing
+    
         
     glPushMatrix(); // start rabbit
 
     glColor3f(1, 1, 1);
     
     glPushMatrix(); // start torso
-
+    
     glScalef(3, 2, 1.5);
     glTranslatef(0, 0.8, 0);
     glutSolidCube(1);
@@ -121,11 +148,13 @@ void displayCallback()
         
     glPushMatrix(); // start tail
     
+    glScalef(1, 1, 1);
     glTranslatef(1.5, 2.2, 0);
-    glScalef(0.5, 0.7, 0.7);
+    glColor3f(1, 1, 0.5);
     glutSolidCube(1);
     glTranslatef(0.5, 0, 0);
     glScalef(0.55, 0.7, 0.7);
+    glColor3f(1, 0.2, 0.5);
     glutSolidCube(1);
     
     glPopMatrix();  // end tail
@@ -134,11 +163,13 @@ void displayCallback()
     
     glTranslatef(-2.0, 3, 0);
     glScalef(1, 1.2, 0.7);
+    glColor3f(0.5, 0.2, 0.5);
     glutSolidCube(1);
     
     glColor3f(0.5, 0.5, 0.5);
     glScalef(0.1, 0.2, 0.4);
     glTranslatef(-5, 1.2, -0.7);
+    glColor3f(1, 0.9, 0.3);
     glutSolidCube(1);
     
     glTranslatef(0, 0, 1.4);
@@ -164,6 +195,13 @@ void displayCallback()
         printf("ERROR: %s\n", gluErrorString(error));
 }
 
+void drawHead() {
+    
+}
+
+void drawBody() {
+    
+}
 
 //---------------------------------------------------------------
 
