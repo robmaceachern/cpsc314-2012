@@ -271,6 +271,8 @@ void drawRabbit(Frame frame) {
     drawScaledCube(0.4, 1.3, 0.2);
     glPopMatrix();
     
+    glColor3f(0.9, 0.9, 0.9);
+    
     glPushMatrix();             // right eye
     glTranslatef(0.7, 0.3, 0.3);
     drawScaledCube(0.2, 0.3, 0.3);
@@ -280,6 +282,8 @@ void drawRabbit(Frame frame) {
     glTranslatef(0.7, 0.3, -0.3);
     drawScaledCube(0.2, 0.3, 0.3);
     glPopMatrix();              // end left eye
+    
+    glColor3f(0.32, 0.31, 0.33); // back to gray
     
     glPopMatrix();              // end neck
     
