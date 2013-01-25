@@ -634,7 +634,7 @@ int main(int argc, char **argv)
 {
     // create window and rendering context
     glutInit( &argc, argv );
-    glutInitDisplayMode( GLUT_DEPTH | GLUT_RGB | GLUT_DOUBLE | GLUT_MULTISAMPLE );
+    glutInitDisplayMode( GLUT_DEPTH | GLUT_RGB | GLUT_DOUBLE);
     glutInitWindowSize( Width, Height );
     glutCreateWindow( "Rabbit" );
     
