@@ -6,16 +6,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "Frame.cpp"
+#include "Frame.h"
 
 enum AnimationMode {
     JUMPCUT, SMOOTH
 };
 
-enum Animation {
-    JUMP, CURL, REAR, LEFT_FRONT_LEG, LEFT_REAR_LEG, RIGHT_FRONT_LEG, RIGHT_REAR_LEG,
-    RIGHT_EAR, LEFT_EAR, HEAD_NOD
-};
+//enum Animation {
+//    JUMP, CURL, REAR, LEFT_FRONT_LEG, LEFT_REAR_LEG, RIGHT_FRONT_LEG, RIGHT_REAR_LEG,
+//    RIGHT_EAR, LEFT_EAR, HEAD_NOD
+//};
 
 int dumpPPM(int frameNum);
 void drawAxis();
@@ -45,7 +45,6 @@ Frame restFrame;
 Frame goalFrame;
 Frame currentFrame;
 AnimationMode animationMode = JUMPCUT;
-Animation lastAnimation = HEAD_NOD;
 int lastAnimationTime = -1;
 
 void keyboardCallback(unsigned char c, int x, int y) {
@@ -105,7 +104,7 @@ void keyboardCallback(unsigned char c, int x, int y) {
             break;
         case 'w':
             printf("Wiggling left ear...\n");
-            toggleEarWiggle(HEAD_RIGHT_EAR);
+            toggleEarWiggle(HEAD_LEFT_EAR);
             break;
         case 'j':
             printf("Jumping...\n");
@@ -181,91 +180,16 @@ void displayCallback()
     
     drawAxis();
     
-    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    // Draw your rabbit here
-    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    
-    //    // testing...
-    //    glPushMatrix();
-    //
-    //    glLoadIdentity();
-    //
-    //    glTranslatef(1, 1, 0);
-    //    glRotatef(90, 1, 0, 0);
-    //    glPushMatrix();
-    //    glScalef(1, 2, 1);
-    //    glTranslatef(1, 1, 0);
-    //
-    //    glPopMatrix();
-    //    glTranslatef(1, 1, 0);
-    //
-    //
-    //    GLfloat matrix[16];
-    //    glGetFloatv (GL_MODELVIEW_MATRIX, matrix);
-    //
-    //    // http://stackoverflow.com/questions/4360918/correct-opengl-matrix-format
-    //    printf("%f %f %f %f \n", matrix[0], matrix[4], matrix[8], matrix[12]);
-    //    printf("%f %f %f %f \n", matrix[1], matrix[5], matrix[9], matrix[13]);
-    //    printf("%f %f %f %f \n", matrix[2], matrix[6], matrix[10], matrix[14]);
-    //    printf("%f %f %f %f \n", matrix[3], matrix[7], matrix[11], matrix[15]);
-    //
-    //    glPopMatrix(); // end testing
-    
-    
-    //    glPushMatrix(); // start rabbit
-    //
-    //    glColor3f(1, 1, 1);
-    //
-    //    glPushMatrix(); // start torso
-    //
-    //    glScalef(3, 2, 1.5);
-    //    glTranslatef(0, 0.8, 0);
-    //    glutSolidCube(1);
-    //
-    //    glPopMatrix();  // end torso
-    //
-    //    glPushMatrix(); // start tail
-    //
-    //    glScalef(1, 1, 1);
-    //    glTranslatef(1.5, 2.2, 0);
-    //    glColor3f(1, 1, 0.5);
-    //    glutSolidCube(1);
-    //    glTranslatef(0.5, 0, 0);
-    //    glScalef(0.55, 0.7, 0.7);
-    //    glColor3f(1, 0.2, 0.5);
-    //    glutSolidCube(1);
-    //
-    //    glPopMatrix();  // end tail
-    //
-    //    glPushMatrix(); // start head
-    //
-    //    glTranslatef(-2.0, 3, 0);
-    //    glScalef(1, 1.2, 0.7);
-    //    glColor3f(0.5, 0.2, 0.5);
-    //    glutSolidCube(1);
-    //
-    //    glColor3f(0.5, 0.5, 0.5);
-    //    glScalef(0.1, 0.2, 0.4);
-    //    glTranslatef(-5, 1.2, -0.7);
-    //    glColor3f(1, 0.9, 0.3);
-    //    glutSolidCube(1);
-    //
-    //    glTranslatef(0, 0, 1.4);
-    //    glutSolidCube(1);
-    //
-    //    glPopMatrix();  // end head
-    //
-    //    glPopMatrix(); // end rabbit
-    
     if (animationMode == JUMPCUT) {
         currentFrame = goalFrame;
     } else {
         int elapsed = glutGet(GLUT_ELAPSED_TIME);
-        printf("elapsed: %d", elapsed);
         
         Frame interpolated = interpolateFrames(currentFrame, goalFrame, elapsed - lastAnimationTime);
         lastAnimationTime = elapsed;
         
+        // We'll check if the interpolated frame is basically the same as the goal frame.
+        // If it is, we'll stop animating for now.
         if (interpolated.equalWithinRange(goalFrame, 0.1)) {
             currentFrame = goalFrame;
             glutIdleFunc( NULL );
@@ -295,19 +219,18 @@ void displayCallback()
         printf("ERROR: %s\n", gluErrorString(error));
 }
 
-void drawHead() {
-    
-}
-
+// Draws the rabbit based on the angles and positions in the frame
 void drawRabbit(Frame frame) {
     
     glColor3f(0.32, 0.31, 0.33);
     
     // center body piece - root of object hierarchy
     Point bodyPoint = frame.getPoint();
-    
+    glTranslatef(0, 2, 0);
+    glRotated(frame.getRotationAngle(MAIN_BODY), 0, 0, 1);
+    glTranslatef(0, -2, 0);
     glTranslatef(bodyPoint.x, bodyPoint.y, bodyPoint.z);
-    drawScaledCube(1.7, 1.2, 1.5);
+    drawScaledCube(1.7, 1.2, 1.3);
     
     // the front body piece
     glPushMatrix();
@@ -319,26 +242,28 @@ void drawRabbit(Frame frame) {
     glPushMatrix();             // neck
     glTranslatef(0.3, 0.5, 0);
     glRotatef(frame.getRotationAngle(BODY_NECK), 0, 0, 1);
-    drawScaledCube(0.7, 0.7, 0.7);
+    drawScaledCube(0.3, 0.7, 0.7);
     
     // the head
     glTranslatef(0.7, 0.5, 0);
     glRotatef(frame.getRotationAngle(NECK_HEAD), 0, 0, 1);
     drawScaledCube(1.3, 1.0, 1.0);
     
-    glPushMatrix();             // right ear
-    glTranslatef(0, 1, 0.55);
+    glPushMatrix();             // right ear - e
+    glTranslatef(-0.1, 0.4, 0.4);
     glRotatef(frame.getRotationAngle(HEAD_RIGHT_EAR), 1, 0, 0);
+    glTranslatef(0, 0.6, 0.0);
     drawScaledCube(0.4, 1.3, 0.2);
     glPopMatrix();
     
-    glPushMatrix();             // left ear
-    glTranslatef(0, 1, -0.55);
+    glPushMatrix();             // left ear - w
+    glTranslatef(-0.1, 0.4, -0.4);
     glRotatef(frame.getRotationAngle(HEAD_LEFT_EAR), 1, 0, 0);
+    glTranslatef(0, 0.6, 0.0);
     drawScaledCube(0.4, 1.3, 0.2);
     glPopMatrix();
     
-    glPushMatrix();             // right eye    
+    glPushMatrix();             // right eye
     glTranslatef(0.7, 0.3, 0.3);
     drawScaledCube(0.2, 0.3, 0.3);
     glPopMatrix();              // end right eye
@@ -440,7 +365,6 @@ void toggleHeadNod() {
         goalFrame.setRotationAngle(NECK_HEAD, -20);
         goalFrame.setRotationAngle(BODY_NECK, -20);
     }
-    lastAnimation = HEAD_NOD;
 }
 
 // Returns an interpolated frame.
@@ -448,45 +372,113 @@ Frame interpolateFrames(Frame currentFrame, Frame goalFrame, int elapsedTime) {
     
     Frame interpolated;
     float timeFactor = 240.0;
-    //float multiplier =  fminf(0.01, elapsedTime/timeFactor);
+    float multiplier =  fminf(0.1, elapsedTime/timeFactor);
     
     // Iterating through our set of angle keys, interpolating if necessary
     for (AngleKey i = BODY_NECK; i != NUMBER_OF_ANGLE_KEYS; i = static_cast<AngleKey>(i + 1)) {
         float curr = currentFrame.getRotationAngle(i);
         float goal = goalFrame.getRotationAngle(i);
         
-        float interpolatedAngle =  curr + (goal - curr) * (elapsedTime/timeFactor);
+        float interpolatedAngle =  curr + (goal - curr) * multiplier;
         
         interpolated.setRotationAngle(i, interpolatedAngle);
     }
     Point currPoint = currentFrame.getPoint();
     Point goalPoint = goalFrame.getPoint();
     
-    float interpolatedX = currPoint.x + (goalPoint.x - currPoint.x) * (elapsedTime/timeFactor);
-    float interpolatedY = currPoint.y + (goalPoint.y - currPoint.y) * (elapsedTime/timeFactor);
-    float interpolatedZ = currPoint.z + (goalPoint.z - currPoint.z) * (elapsedTime/timeFactor);
+    float interpolatedX = currPoint.x + (goalPoint.x - currPoint.x) * multiplier;
+    float interpolatedY = currPoint.y + (goalPoint.y - currPoint.y) * multiplier;
+    float interpolatedZ = currPoint.z + (goalPoint.z - currPoint.z) * multiplier;
     
     interpolated.setPoint(Point(interpolatedX, interpolatedY, interpolatedZ));
     
     return interpolated;
 }
 
+// Alter's the goalFrame's leg angles depending on current position and the leg specified
 void toggleLegRaise(AngleKey legId) {
+    
+    prepAnimation();
+    
+    if (legId == BODY_LEFT_FRONT_LEG || legId == BODY_RIGHT_FRONT_LEG) {
+        // front leg
+        float raiseAngle = 90;
+        AngleKey lowerLeg;
+        
+        if (legId == BODY_RIGHT_FRONT_LEG) {
+            lowerLeg = RIGHT_FRONT_LOWER_LEG;
+        } else {
+            lowerLeg = LEFT_FRONT_LOWER_LEG;
+        }
+        
+        bool shouldRaise = (currentFrame.getRotationAngle(legId) < raiseAngle -30);
+        
+        if (shouldRaise) {
+            goalFrame.setRotationAngle(legId, raiseAngle);
+            
+            // lower leg
+            float lowerLegAngle = -80;
+            goalFrame.setRotationAngle(lowerLeg, lowerLegAngle);
+            
+        } else {
+            goalFrame.setRotationAngle(legId, restFrame.getRotationAngle(legId));
+            goalFrame.setRotationAngle(lowerLeg, restFrame.getRotationAngle(lowerLeg));
+        }
+        
+        
+    } else if (legId == BODY_LEFT_REAR_LEG || legId == BODY_RIGHT_REAR_LEG) {
+        // rear leg
+        float raiseAngle = 45;
+        
+        bool shouldRaise = (currentFrame.getRotationAngle(legId) < raiseAngle - 20);
+        
+        if (shouldRaise) {
+            goalFrame.setRotationAngle(legId, raiseAngle);
+        } else {
+            goalFrame.setRotationAngle(legId, restFrame.getRotationAngle(legId));
+        }
+    }
+    
     printf("TODO leg raise \n");
 }
 
+// Updates the ear angles on the goalFrame
 void toggleEarWiggle(AngleKey earId) {
+    
+    prepAnimation();
+
+    float wiggleAngle;
+    bool shouldWiggle;
+    
+    if (earId == HEAD_RIGHT_EAR) {
+        wiggleAngle = 170;
+        shouldWiggle = (currentFrame.getRotationAngle(earId) < wiggleAngle - 45);
+    } else if (earId == HEAD_LEFT_EAR) {
+        wiggleAngle = -170;
+        printf("left ear angle current: %f", currentFrame.getRotationAngle(earId));
+        shouldWiggle = (currentFrame.getRotationAngle(earId) > wiggleAngle + 45);
+    }
+    
+    if (shouldWiggle) {
+        goalFrame.setRotationAngle(earId, wiggleAngle);
+    } else {
+        goalFrame.setRotationAngle(earId, restFrame.getRotationAngle(earId));
+    }
+    
     printf("TODO ear wiggle \n");
 }
 
+// Updates multiple goalFrame angles when jumping
 void toggleJump() {
     
     prepAnimation();
     
-    float height = 3;
+    float height = 3.5;
     
-    if (currentFrame.getPoint().y < height) {
-        // we will jump up if we're currently lower than jump height
+    // we will jump up if we're currently lower than jump height
+    bool shouldJump = currentFrame.getPoint().y < height - 1;
+    
+    if (shouldJump) {
         goalFrame.setPoint(Point(0, height, 0));
         goalFrame.setRotationAngle(BODY_REAR, -10);
         goalFrame.setRotationAngle(BODY_CHEST, 20);
@@ -494,6 +486,8 @@ void toggleJump() {
         goalFrame.setRotationAngle(BODY_RIGHT_REAR_LEG, -40);
         goalFrame.setRotationAngle(BODY_LEFT_FRONT_LEG, 40);
         goalFrame.setRotationAngle(BODY_RIGHT_FRONT_LEG, 40);
+        goalFrame.setRotationAngle(BODY_NECK, 20);
+        goalFrame.setRotationAngle(NECK_HEAD, 10);
     } else {
         // back to rest
         goalFrame = restFrame.copy();
@@ -514,11 +508,29 @@ void toggleCurl() {
     } else {
         goalFrame.setRotationAngle(BODY_REAR, curlRate);
         goalFrame.setRotationAngle(BODY_CHEST, -curlRate);
+        goalFrame.setRotationAngle(BODY_NECK, -curlRate * 2);
+        goalFrame.setRotationAngle(NECK_HEAD, -curlRate);
     }
 }
 
 void toggleRear() {
     prepAnimation();
+    
+    float rearAngle = 75;
+    
+    bool shouldRear = currentFrame.getRotationAngle(MAIN_BODY) < rearAngle - 30;
+    
+    if (shouldRear) {
+        goalFrame.setRotationAngle(MAIN_BODY, rearAngle);
+        goalFrame.setRotationAngle(BODY_RIGHT_REAR_LEG, -rearAngle);
+        goalFrame.setRotationAngle(BODY_LEFT_REAR_LEG, -rearAngle);
+        goalFrame.setRotationAngle(BODY_NECK, -rearAngle);
+        goalFrame.setRotationAngle(LEFT_FRONT_LOWER_LEG, -rearAngle);
+        goalFrame.setRotationAngle(RIGHT_FRONT_LOWER_LEG, -rearAngle);
+    } else {
+        goalFrame = restFrame.copy();
+    }
+    
     printf("TODO rear \n");
 }
 
