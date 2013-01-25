@@ -1,12 +1,13 @@
 #ifdef __APPLE__
 #  include <GLUT/glut.h>
+#  include "Frame.h"
 #else
+#  include "Frame.cpp"
 #  include <GL/glut.h>
 #endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "Frame.h"
 
 enum AnimationMode {
     JUMPCUT, SMOOTH
