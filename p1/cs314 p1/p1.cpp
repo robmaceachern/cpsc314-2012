@@ -5,10 +5,22 @@
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#include "Frame.h"
+
+enum AnimationMode {
+    JUMPCUT, SMOOTH
+};
 
 int dumpPPM(int frameNum);
 void drawAxis();
 void drawFloor();
+void drawRabbit(Frame frame);
+void drawHead();
+void drawCube();
+void drawScaledCube(float x, float y, float z);
+void toggleHeadNod();
+Frame interpolateFrames(Frame currentFrame, Frame goalFrame, int elapsedTime);
+void idle();
 
 unsigned char camera = 'r';
 
@@ -17,6 +29,9 @@ int Width = 800;      // window width (pixels)
 int Height = 800;     // window height (pixels)
 bool Dump=false;      // flag set to true when dumping animation frames
 int rotation = 0;
+Frame goalFrame;
+Frame currentFrame;
+AnimationMode animationMode = JUMPCUT;
 
 void keyboardCallback(unsigned char c, int x, int y) {
     switch (c) {
@@ -51,6 +66,21 @@ void keyboardCallback(unsigned char c, int x, int y) {
         case 'd':               // dump animation PPM frames
             iCount = 0;         // image file count
             Dump = !Dump;
+            break;
+        case 'h':
+            printf("Nodding head...\n");
+            toggleHeadNod();
+            break;
+        case ' ':
+            if (animationMode == JUMPCUT) {
+                printf("Switching to SMOOTH animation mode\n");
+                animationMode = SMOOTH;
+                glutIdleFunc(idle);
+            } else {
+                printf("Switching to JUMPCUT animation mode\n");
+                animationMode = JUMPCUT;
+                glutIdleFunc(NULL);
+            }
             break;
     }
     
@@ -107,77 +137,97 @@ void displayCallback()
     // Draw your rabbit here
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     
-//    // testing...
-//    glPushMatrix();
-//    
-//    glLoadIdentity();
-//    
-//    glTranslatef(1, 1, 0);
-//    glRotatef(90, 1, 0, 0);
-//    glPushMatrix();
-//    glScalef(1, 2, 1);
-//    glTranslatef(1, 1, 0);
-//    
-//    glPopMatrix();
-//    glTranslatef(1, 1, 0);
-//    
-//    
-//    GLfloat matrix[16];
-//    glGetFloatv (GL_MODELVIEW_MATRIX, matrix);
-//    
-//    // http://stackoverflow.com/questions/4360918/correct-opengl-matrix-format
-//    printf("%f %f %f %f \n", matrix[0], matrix[4], matrix[8], matrix[12]);
-//    printf("%f %f %f %f \n", matrix[1], matrix[5], matrix[9], matrix[13]);
-//    printf("%f %f %f %f \n", matrix[2], matrix[6], matrix[10], matrix[14]);
-//    printf("%f %f %f %f \n", matrix[3], matrix[7], matrix[11], matrix[15]);
-//    
-//    glPopMatrix(); // end testing
+    //    // testing...
+    //    glPushMatrix();
+    //
+    //    glLoadIdentity();
+    //
+    //    glTranslatef(1, 1, 0);
+    //    glRotatef(90, 1, 0, 0);
+    //    glPushMatrix();
+    //    glScalef(1, 2, 1);
+    //    glTranslatef(1, 1, 0);
+    //
+    //    glPopMatrix();
+    //    glTranslatef(1, 1, 0);
+    //
+    //
+    //    GLfloat matrix[16];
+    //    glGetFloatv (GL_MODELVIEW_MATRIX, matrix);
+    //
+    //    // http://stackoverflow.com/questions/4360918/correct-opengl-matrix-format
+    //    printf("%f %f %f %f \n", matrix[0], matrix[4], matrix[8], matrix[12]);
+    //    printf("%f %f %f %f \n", matrix[1], matrix[5], matrix[9], matrix[13]);
+    //    printf("%f %f %f %f \n", matrix[2], matrix[6], matrix[10], matrix[14]);
+    //    printf("%f %f %f %f \n", matrix[3], matrix[7], matrix[11], matrix[15]);
+    //
+    //    glPopMatrix(); // end testing
     
+    
+    //    glPushMatrix(); // start rabbit
+    //
+    //    glColor3f(1, 1, 1);
+    //
+    //    glPushMatrix(); // start torso
+    //
+    //    glScalef(3, 2, 1.5);
+    //    glTranslatef(0, 0.8, 0);
+    //    glutSolidCube(1);
+    //
+    //    glPopMatrix();  // end torso
+    //
+    //    glPushMatrix(); // start tail
+    //
+    //    glScalef(1, 1, 1);
+    //    glTranslatef(1.5, 2.2, 0);
+    //    glColor3f(1, 1, 0.5);
+    //    glutSolidCube(1);
+    //    glTranslatef(0.5, 0, 0);
+    //    glScalef(0.55, 0.7, 0.7);
+    //    glColor3f(1, 0.2, 0.5);
+    //    glutSolidCube(1);
+    //
+    //    glPopMatrix();  // end tail
+    //
+    //    glPushMatrix(); // start head
+    //
+    //    glTranslatef(-2.0, 3, 0);
+    //    glScalef(1, 1.2, 0.7);
+    //    glColor3f(0.5, 0.2, 0.5);
+    //    glutSolidCube(1);
+    //
+    //    glColor3f(0.5, 0.5, 0.5);
+    //    glScalef(0.1, 0.2, 0.4);
+    //    glTranslatef(-5, 1.2, -0.7);
+    //    glColor3f(1, 0.9, 0.3);
+    //    glutSolidCube(1);
+    //
+    //    glTranslatef(0, 0, 1.4);
+    //    glutSolidCube(1);
+    //
+    //    glPopMatrix();  // end head
+    //
+    //    glPopMatrix(); // end rabbit
+    
+    if (animationMode == JUMPCUT) {
+        currentFrame = goalFrame;
+    } else {
+        Frame interpolated = interpolateFrames(currentFrame, goalFrame, 100);
         
-    glPushMatrix(); // start rabbit
-
-    glColor3f(1, 1, 1);
+        if (interpolated.equalWithinRange(goalFrame, 0.01)) {
+            currentFrame = goalFrame;
+            printf("equal within 0.01\n");
+            glutIdleFunc( NULL );
+        } else {
+            currentFrame = interpolated;
+            printf("using interpolated\n");
+            glutIdleFunc(idle);
+        }
+    }
     
-    glPushMatrix(); // start torso
-    
-    glScalef(3, 2, 1.5);
-    glTranslatef(0, 0.8, 0);
-    glutSolidCube(1);
-    
-    glPopMatrix();  // end torso
-        
-    glPushMatrix(); // start tail
-    
-    glScalef(1, 1, 1);
-    glTranslatef(1.5, 2.2, 0);
-    glColor3f(1, 1, 0.5);
-    glutSolidCube(1);
-    glTranslatef(0.5, 0, 0);
-    glScalef(0.55, 0.7, 0.7);
-    glColor3f(1, 0.2, 0.5);
-    glutSolidCube(1);
-    
-    glPopMatrix();  // end tail
-    
-    glPushMatrix(); // start head
-    
-    glTranslatef(-2.0, 3, 0);
-    glScalef(1, 1.2, 0.7);
-    glColor3f(0.5, 0.2, 0.5);
-    glutSolidCube(1);
-    
-    glColor3f(0.5, 0.5, 0.5);
-    glScalef(0.1, 0.2, 0.4);
-    glTranslatef(-5, 1.2, -0.7);
-    glColor3f(1, 0.9, 0.3);
-    glutSolidCube(1);
-    
-    glTranslatef(0, 0, 1.4);
-    glutSolidCube(1);
-    
-    glPopMatrix();  // end head
-    
-    glPopMatrix(); // end rabbit
+    glPushMatrix();
+    drawRabbit(currentFrame);
+    glPopMatrix();
     
     // draw after the opaque objects, since it is translucent
     drawFloor();
@@ -199,8 +249,113 @@ void drawHead() {
     
 }
 
-void drawBody() {
+void drawRabbit(Frame frame) {
     
+    // center body piece - root of object hierarchy
+    Point bodyPoint = frame.getPoint();
+    
+    glTranslatef(bodyPoint.x, bodyPoint.y, bodyPoint.z);
+    glColor3f(1, 0, 0); // red
+    drawCube();
+    
+    // the front body piece
+    glPushMatrix();
+    glColor3f(0, 1, 0); // green
+    glTranslatef(1.2, 0, 0);
+    drawCube();
+    
+    // the neck
+    glTranslatef(0.6, 0.5, 0);
+    glRotatef(frame.getRotationAngle(BODY_NECK), 0, 0, 1);
+    glColor3f(0.5, 0.5, 0.5);
+    drawScaledCube(0.5, 0.5, 0.5);
+    
+    // the head
+    glTranslatef(1, 0.5, 0);
+    glRotatef(frame.getRotationAngle(NECK_HEAD), 0, 0, 1);
+    glColor3f(0.2, 0.7, 0.3);
+    drawScaledCube(2, 2, 2);
+    
+    // left ear
+    glPushMatrix();
+    glTranslatef(0, 1, 1);
+    glColor3f(0.1, 0.2, 0.3);
+    drawScaledCube(0.4, 1, 0.2);
+    glPopMatrix();
+    
+    // right ear
+    glPushMatrix();
+    glTranslatef(0, 1, -1);
+    glColor3f(0.5, 0.7, 0.8);
+    drawScaledCube(0.4, 1, 0.2);
+    glPopMatrix();
+    
+    glPopMatrix(); // end front body piece
+    
+    // the rear body piece
+    glPushMatrix();
+    glColor3f(0, 0, 1); // blue
+    glTranslatef(-1.2, 0, 0);
+    drawCube();
+    glPopMatrix();
+}
+
+void drawCube() {
+    glutSolidCube(1);
+}
+
+void idle() {
+    glutPostRedisplay();
+}
+
+void drawScaledCube(float x, float y, float z) {
+    glPushMatrix();
+    glScalef(x, y, z);
+    drawCube();
+    glPopMatrix();
+}
+
+// Updates the goal frame neck angles
+void toggleHeadNod() {
+    // determine if head is already being nodded
+    float currentNeckHead = currentFrame.getRotationAngle(NECK_HEAD);
+    
+    if (currentNeckHead < 0) {
+        // We will bring the head back up
+        goalFrame.setRotationAngle(NECK_HEAD, 10);
+        goalFrame.setRotationAngle(BODY_NECK, 10);
+    } else {
+        // Drop the head down
+        goalFrame.setRotationAngle(NECK_HEAD, -20);
+        goalFrame.setRotationAngle(BODY_NECK, -20);
+    }
+}
+
+// Returns an interpolated frame.
+Frame interpolateFrames(Frame currentFrame, Frame goalFrame, int elapsedTime) {
+    
+    Frame interpolated;
+    
+    // Iterating through our set of angle keys, interpolating if necessary
+    for (AngleKey i = BODY_NECK; i != NUMBER_OF_ANGLE_KEYS; i++) {
+        float curr = currentFrame.getRotationAngle(i);
+        float goal = goalFrame.getRotationAngle(i);
+        
+        float interpolatedAngle =  curr + (goal - curr) * (elapsedTime/2400.0);
+        printf("Interpolated angle for %d: %f\n", i, interpolatedAngle);
+        
+        interpolated.setRotationAngle(i, interpolatedAngle);
+    }
+    Point currPoint = currentFrame.getPoint();
+    Point goalPoint = goalFrame.getPoint();
+    
+    float interpolatedX = currPoint.x + (goalPoint.x - currPoint.x) * (elapsedTime/2400.0);
+    float interpolatedY = currPoint.y + (goalPoint.y - currPoint.y) * (elapsedTime/2400.0);
+    float interpolatedZ = currPoint.z + (goalPoint.z - currPoint.z) * (elapsedTime/2400.0);
+    
+    interpolated.setPoint(Point(interpolatedX, interpolatedY, interpolatedZ));
+    
+    return interpolated;
 }
 
 //---------------------------------------------------------------
@@ -334,6 +489,11 @@ int main(int argc, char **argv)
     glEnable( GL_LIGHT0 );
     glEnable( GL_LIGHT1 );
     glEnable( GL_COLOR_MATERIAL );
+    
+    // set our initial frame for the rabbit
+    currentFrame = Frame();
+    currentFrame.setPoint(Point(0, 1, 0));
+    goalFrame = currentFrame;
     
     // pass control over to GLUT
     glutMainLoop();

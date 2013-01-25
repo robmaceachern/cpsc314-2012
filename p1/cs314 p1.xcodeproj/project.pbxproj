@@ -12,6 +12,7 @@
 		4414492B169F76B9009B6190 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4414492A169F76B9009B6190 /* OpenGL.framework */; };
 		4414492D169F76BD009B6190 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4414492C169F76BD009B6190 /* GLUT.framework */; };
 		44EE6D6B16A45F5100A7E399 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 44EE6D6A16A45F5100A7E399 /* Makefile */; };
+		7DA7BEA616B20503007D25FD /* Frame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7DA7BEA416B20503007D25FD /* Frame.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -34,6 +35,8 @@
 		4414492A169F76B9009B6190 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		4414492C169F76BD009B6190 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
 		44EE6D6A16A45F5100A7E399 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; name = Makefile; path = "cs314 p1/Makefile"; sourceTree = "<group>"; };
+		7DA7BEA416B20503007D25FD /* Frame.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Frame.cpp; sourceTree = "<group>"; };
+		7DA7BEA516B20503007D25FD /* Frame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Frame.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -72,6 +75,8 @@
 			isa = PBXGroup;
 			children = (
 				44144927169F7672009B6190 /* p1.cpp */,
+				7DA7BEA416B20503007D25FD /* Frame.cpp */,
+				7DA7BEA516B20503007D25FD /* Frame.h */,
 				4414491F169F765E009B6190 /* cs314_p1.1 */,
 			);
 			path = "cs314 p1";
@@ -129,6 +134,7 @@
 			files = (
 				44144929169F7672009B6190 /* p1.cpp in Sources */,
 				44EE6D6B16A45F5100A7E399 /* Makefile in Sources */,
+				7DA7BEA616B20503007D25FD /* Frame.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
