@@ -5,6 +5,7 @@
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "Frame.h"
 
 enum AnimationMode {
@@ -31,6 +32,7 @@ void toggleEarWiggle(AngleKey earId);
 void toggleJump();
 void toggleCurl();
 void toggleRear();
+void prepAnimation();
 
 unsigned char camera = 'r';
 
@@ -44,6 +46,7 @@ Frame goalFrame;
 Frame currentFrame;
 AnimationMode animationMode = JUMPCUT;
 Animation lastAnimation = HEAD_NOD;
+int lastAnimationTime = -1;
 
 void keyboardCallback(unsigned char c, int x, int y) {
     switch (c) {
@@ -257,9 +260,13 @@ void displayCallback()
     if (animationMode == JUMPCUT) {
         currentFrame = goalFrame;
     } else {
-        Frame interpolated = interpolateFrames(currentFrame, goalFrame, 100);
+        int elapsed = glutGet(GLUT_ELAPSED_TIME);
+        printf("elapsed: %d", elapsed);
         
-        if (interpolated.equalWithinRange(goalFrame, 0.01)) {
+        Frame interpolated = interpolateFrames(currentFrame, goalFrame, elapsed - lastAnimationTime);
+        lastAnimationTime = elapsed;
+        
+        if (interpolated.equalWithinRange(goalFrame, 0.1)) {
             currentFrame = goalFrame;
             glutIdleFunc( NULL );
         } else {
@@ -419,6 +426,8 @@ void drawScaledCube(float x, float y, float z) {
 
 // Updates the goal frame neck angles
 void toggleHeadNod() {
+    
+    prepAnimation();
     // determine if head is already being nodded
     float currentNeckHead = currentFrame.getRotationAngle(NECK_HEAD);
     
@@ -438,22 +447,24 @@ void toggleHeadNod() {
 Frame interpolateFrames(Frame currentFrame, Frame goalFrame, int elapsedTime) {
     
     Frame interpolated;
+    float timeFactor = 240.0;
+    float multiplier =  fminf(0.01, elapsedTime/timeFactor);
     
     // Iterating through our set of angle keys, interpolating if necessary
     for (AngleKey i = BODY_NECK; i != NUMBER_OF_ANGLE_KEYS; i++) {
         float curr = currentFrame.getRotationAngle(i);
         float goal = goalFrame.getRotationAngle(i);
         
-        float interpolatedAngle =  curr + (goal - curr) * (elapsedTime/2400.0);
+        float interpolatedAngle =  curr + (goal - curr) * (elapsedTime/timeFactor);
         
         interpolated.setRotationAngle(i, interpolatedAngle);
     }
     Point currPoint = currentFrame.getPoint();
     Point goalPoint = goalFrame.getPoint();
     
-    float interpolatedX = currPoint.x + (goalPoint.x - currPoint.x) * (elapsedTime/2400.0);
-    float interpolatedY = currPoint.y + (goalPoint.y - currPoint.y) * (elapsedTime/2400.0);
-    float interpolatedZ = currPoint.z + (goalPoint.z - currPoint.z) * (elapsedTime/2400.0);
+    float interpolatedX = currPoint.x + (goalPoint.x - currPoint.x) * (elapsedTime/timeFactor);
+    float interpolatedY = currPoint.y + (goalPoint.y - currPoint.y) * (elapsedTime/timeFactor);
+    float interpolatedZ = currPoint.z + (goalPoint.z - currPoint.z) * (elapsedTime/timeFactor);
     
     interpolated.setPoint(Point(interpolatedX, interpolatedY, interpolatedZ));
     
@@ -469,6 +480,8 @@ void toggleEarWiggle(AngleKey earId) {
 }
 
 void toggleJump() {
+    
+    prepAnimation();
     
     float height = 3;
     
@@ -489,6 +502,8 @@ void toggleJump() {
 
 void toggleCurl() {
     
+    prepAnimation();
+    
     float curlRate = 35;
     
     bool isCurled = (currentFrame.getRotationAngle(BODY_CHEST) == -curlRate);
@@ -503,7 +518,12 @@ void toggleCurl() {
 }
 
 void toggleRear() {
+    prepAnimation();
     printf("TODO rear \n");
+}
+
+void prepAnimation() {
+    lastAnimationTime = glutGet(GLUT_ELAPSED_TIME);
 }
 
 //---------------------------------------------------------------
