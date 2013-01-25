@@ -33,6 +33,7 @@ void toggleEarWiggle(AngleKey earId);
 void toggleJump();
 void toggleCurl();
 void toggleRear();
+void toggleSpin();
 void prepAnimation();
 
 unsigned char camera = 'r';
@@ -118,6 +119,10 @@ void keyboardCallback(unsigned char c, int x, int y) {
         case 't':
             printf("Rearing...\n");
             toggleRear();
+            break;
+        case 's':
+            printf("Spinning...\n");
+            toggleSpin();
             break;
         case ' ':
             if (animationMode == JUMPCUT) {
@@ -224,6 +229,8 @@ void displayCallback()
 void drawRabbit(Frame frame) {
     
     glColor3f(0.32, 0.31, 0.33);
+    
+    glRotated(frame.getRotationAngle(MAIN_BODY_SPIN), 0, 1, 0);
     
     // center body piece - root of object hierarchy
     Point bodyPoint = frame.getPoint();
@@ -535,6 +542,11 @@ void toggleRear() {
     printf("TODO rear \n");
 }
 
+void toggleSpin() {
+    float spinAmount = rand() % 361;
+    goalFrame.setRotationAngle(MAIN_BODY_SPIN, spinAmount);
+}
+
 void prepAnimation() {
     lastAnimationTime = glutGet(GLUT_ELAPSED_TIME);
 }
@@ -634,7 +646,7 @@ int main(int argc, char **argv)
 {
     // create window and rendering context
     glutInit( &argc, argv );
-    glutInitDisplayMode( GLUT_DEPTH | GLUT_RGB | GLUT_DOUBLE);
+    glutInitDisplayMode( GLUT_DEPTH | GLUT_RGB | GLUT_DOUBLE | GLUT_MULTISAMPLE);
     glutInitWindowSize( Width, Height );
     glutCreateWindow( "Rabbit" );
     
