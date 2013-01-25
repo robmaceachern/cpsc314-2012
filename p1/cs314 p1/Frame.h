@@ -48,6 +48,8 @@ public:
     void setPoint(Point pt);
     
     bool equalWithinRange(Frame other, float epsilon);
+    
+    Frame copy();
 
 };
 

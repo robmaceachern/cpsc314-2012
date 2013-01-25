@@ -47,3 +47,15 @@ bool Frame::equalWithinRange(Frame other, float epsilon) {
     
     return true;
 }
+
+Frame Frame::copy() {
+    Frame copy;
+    
+    copy.setPoint(point);
+    
+    for (AngleKey i = BODY_NECK; i != NUMBER_OF_ANGLE_KEYS; i++) {
+        copy.setRotationAngle(i, rotationAngles[i]);
+    }
+    
+    return copy;
+}

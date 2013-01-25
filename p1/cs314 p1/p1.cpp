@@ -11,6 +11,11 @@ enum AnimationMode {
     JUMPCUT, SMOOTH
 };
 
+enum Animation {
+    JUMP, CURL, REAR, LEFT_FRONT_LEG, LEFT_REAR_LEG, RIGHT_FRONT_LEG, RIGHT_REAR_LEG,
+    RIGHT_EAR, LEFT_EAR, HEAD_NOD
+};
+
 int dumpPPM(int frameNum);
 void drawAxis();
 void drawFloor();
@@ -34,9 +39,11 @@ int Width = 800;      // window width (pixels)
 int Height = 800;     // window height (pixels)
 bool Dump=false;      // flag set to true when dumping animation frames
 int rotation = 0;
+Frame restFrame;
 Frame goalFrame;
 Frame currentFrame;
 AnimationMode animationMode = JUMPCUT;
+Animation lastAnimation = HEAD_NOD;
 
 void keyboardCallback(unsigned char c, int x, int y) {
     switch (c) {
@@ -293,12 +300,13 @@ void drawRabbit(Frame frame) {
     Point bodyPoint = frame.getPoint();
     
     glTranslatef(bodyPoint.x, bodyPoint.y, bodyPoint.z);
-    drawScaledCube(1.5, 1.4, 1.5);
+    drawScaledCube(1.7, 1.2, 1.5);
     
     // the front body piece
     glPushMatrix();
-    glTranslatef(1.3, -0.2, 0);
+    glTranslatef(0.8, -0.1, 0);
     glRotatef(frame.getRotationAngle(BODY_CHEST), 0, 0, 1);
+    glTranslatef(0.4, 0.1, 0);
     drawScaledCube(1.3, 1.2, 1.3);
 
     glPushMatrix();             // neck
@@ -358,8 +366,9 @@ void drawRabbit(Frame frame) {
     glPopMatrix();              // end front body
     
     glPushMatrix();             // rear body piece
-    glTranslatef(-1.4, -0.2, 0);
+    glTranslated(-0.3, 0.3, 0);
     glRotatef(frame.getRotationAngle(BODY_REAR), 0, 0, 1);
+    glTranslatef(-1.1, -0.3, 0);
     drawScaledCube(1.4, 1.4, 1.2);
     
     glPushMatrix();             // right rear leg
@@ -385,7 +394,7 @@ void drawRabbit(Frame frame) {
     glPopMatrix();              // end left rear leg
     
     glPushMatrix();             // tail
-    glColor3f(0.9, 0.2, 0.5);
+    glColor3f(0.9, 0.9, 0.9);
     glTranslatef(-0.7, 0.6, 0);
     drawScaledCube(0.5, 0.5, 0.5);
     glPopMatrix();              // end tail
@@ -422,6 +431,7 @@ void toggleHeadNod() {
         goalFrame.setRotationAngle(NECK_HEAD, -20);
         goalFrame.setRotationAngle(BODY_NECK, -20);
     }
+    lastAnimation = HEAD_NOD;
 }
 
 // Returns an interpolated frame.
@@ -459,11 +469,37 @@ void toggleEarWiggle(AngleKey earId) {
 }
 
 void toggleJump() {
-    printf("TODO jump \n");
+    
+    float height = 3;
+    
+    if (currentFrame.getPoint().y < height) {
+        // we will jump up if we're currently lower than jump height
+        goalFrame.setPoint(Point(0, height, 0));
+        goalFrame.setRotationAngle(BODY_REAR, -10);
+        goalFrame.setRotationAngle(BODY_CHEST, 20);
+        goalFrame.setRotationAngle(BODY_LEFT_REAR_LEG, -40);
+        goalFrame.setRotationAngle(BODY_RIGHT_REAR_LEG, -40);
+        goalFrame.setRotationAngle(BODY_LEFT_FRONT_LEG, 40);
+        goalFrame.setRotationAngle(BODY_RIGHT_FRONT_LEG, 40);
+    } else {
+        // back to rest
+        goalFrame = restFrame.copy();
+    }
 }
 
 void toggleCurl() {
-    printf("TODO curl \n");
+    
+    float curlRate = 35;
+    
+    bool isCurled = (currentFrame.getRotationAngle(BODY_CHEST) == -curlRate);
+    
+    if (isCurled) {
+        // return to rest position
+        goalFrame = restFrame.copy();
+    } else {
+        goalFrame.setRotationAngle(BODY_REAR, curlRate);
+        goalFrame.setRotationAngle(BODY_CHEST, -curlRate);
+    }
 }
 
 void toggleRear() {
@@ -620,10 +656,11 @@ int main(int argc, char **argv)
     currentFrame.setRotationAngle(HEAD_LEFT_EAR, -10);
     currentFrame.setRotationAngle(HEAD_RIGHT_EAR, 10);
     
-    currentFrame.setRotationAngle(BODY_CHEST, 5);
-    currentFrame.setRotationAngle(BODY_REAR, -5);
+    currentFrame.setRotationAngle(BODY_CHEST, -5);
+    currentFrame.setRotationAngle(BODY_REAR, 5);
 
-    goalFrame = currentFrame;
+    restFrame = currentFrame.copy();
+    goalFrame = currentFrame.copy();
     
     // pass control over to GLUT
     glutMainLoop();

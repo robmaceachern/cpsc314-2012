@@ -37,6 +37,7 @@
 		44EE6D6A16A45F5100A7E399 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; name = Makefile; path = "cs314 p1/Makefile"; sourceTree = "<group>"; };
 		7DA7BEA416B20503007D25FD /* Frame.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Frame.cpp; sourceTree = "<group>"; };
 		7DA7BEA516B20503007D25FD /* Frame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Frame.h; sourceTree = "<group>"; };
+		7DA7BEA816B30DF6007D25FD /* readme.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,6 +76,7 @@
 			isa = PBXGroup;
 			children = (
 				44144927169F7672009B6190 /* p1.cpp */,
+				7DA7BEA816B30DF6007D25FD /* readme.txt */,
 				7DA7BEA416B20503007D25FD /* Frame.cpp */,
 				7DA7BEA516B20503007D25FD /* Frame.h */,
 				4414491F169F765E009B6190 /* cs314_p1.1 */,
