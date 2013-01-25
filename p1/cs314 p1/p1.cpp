@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include "Frame.h"
+#include "Frame.cpp"
 
 enum AnimationMode {
     JUMPCUT, SMOOTH
@@ -448,10 +448,10 @@ Frame interpolateFrames(Frame currentFrame, Frame goalFrame, int elapsedTime) {
     
     Frame interpolated;
     float timeFactor = 240.0;
-    float multiplier =  fminf(0.01, elapsedTime/timeFactor);
+    //float multiplier =  fminf(0.01, elapsedTime/timeFactor);
     
     // Iterating through our set of angle keys, interpolating if necessary
-    for (AngleKey i = BODY_NECK; i != NUMBER_OF_ANGLE_KEYS; i++) {
+    for (AngleKey i = BODY_NECK; i != NUMBER_OF_ANGLE_KEYS; i = static_cast<AngleKey>(i + 1)) {
         float curr = currentFrame.getRotationAngle(i);
         float goal = goalFrame.getRotationAngle(i);
         

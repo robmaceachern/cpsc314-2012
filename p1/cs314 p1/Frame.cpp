@@ -37,7 +37,7 @@ bool Frame::equalWithinRange(Frame other, float epsilon) {
         return false;
     }
     
-    for (AngleKey i = BODY_NECK; i != NUMBER_OF_ANGLE_KEYS; i++) {
+    for (AngleKey i = BODY_NECK; i != NUMBER_OF_ANGLE_KEYS; i = static_cast<AngleKey>(i + 1)) {
         float angle = rotationAngles[i];
         float otherAngle = other.rotationAngles[i];
         if (fabs(angle - otherAngle) > epsilon) {
@@ -53,7 +53,7 @@ Frame Frame::copy() {
     
     copy.setPoint(point);
     
-    for (AngleKey i = BODY_NECK; i != NUMBER_OF_ANGLE_KEYS; i++) {
+    for (AngleKey i = BODY_NECK; i != NUMBER_OF_ANGLE_KEYS; i = static_cast<AngleKey>(i + 1)) {
         copy.setRotationAngle(i, rotationAngles[i]);
     }
     
