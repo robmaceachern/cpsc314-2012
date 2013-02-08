@@ -16,9 +16,18 @@
 
 #include<iostream>
 #include<stdlib.h>
+#include<math.h>
+
+enum SpaceShip { SCOUT, MOTHER };
+enum NavigationMode {ABSOLUTE, RELATIVE, GEOSYNC};
 
 void drawAxis();
 void positionCamera(int cameraId);
+void doAdjustEyePoint(float x, float y, float z);
+void doAdjustLookatPoint(float x, float y, float z);
+void doAdjustUpVector(float x, float y, float z);
+void drawOrbit(float radius);
+void drawPlanet(float radius, float distanceFromSun, float r, float g, float b);
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -42,6 +51,28 @@ int disp_width=512, disp_height=512;
 int day = 0;
 int hour = 0;
 
+float scoutShip[9];
+float motherShip[9];
+
+float speed = 1;
+
+// 9 planets
+// radius, distanceFromSun, 
+float planetInfo[10][2] = {
+    {1, 0},             // sun
+    {0.2, 1.3},           // mercury
+    {0.5, 1.7},          // venus
+    {0.4, 2.2},
+    {0.4, 3.2},
+    {0.4, 4.2},
+    {0.4, 5.2},
+    {0.4, 6.2},
+    {0.4, 7.2},
+    {0.4, 8.2}
+};
+
+SpaceShip currentShipControl = SCOUT;
+NavigationMode currentNavigationMode = ABSOLUTE;
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -123,34 +154,129 @@ void keyboard_callback( unsigned char key, int x, int y ){
         case '9':
             printf("Keyboard press for geosync on planet: %c\n", key);
             break;
-        case '-':
-        case '=':
-            printf("Keyboard press for speed change: %c\n", key);
-            break;
         case 'q':
             printf("Keyboard press for negative yaw: %c\n", key);
             break;
         case 'r':
+            currentNavigationMode = RELATIVE;
+            printf("Navigation mode set to RELATIVE\n");
+            break;
         case 'g':
+            currentNavigationMode = GEOSYNC;
+            printf("Navigation mode set to GEOSYNC\n");
+            break;
         case 'l':
-            printf("Key press for mode switch: %c\n", key);
+            currentNavigationMode = ABSOLUTE;
+            printf("Navigation mode set to ABSOLUTE\n");
             break;
         case '<':
+            currentShipControl = SCOUT;
+            printf("Ship control set to SCOUT \n");
+            break;
         case '>':
-            printf("Key press for ship control switch: %c\n", key);
+            currentShipControl = MOTHER;
+            printf("Ship control set to MOTHER \n");
+            break;
+        case 'x':
+            {
+                if (currentNavigationMode == ABSOLUTE) {
+                    doAdjustEyePoint(speed, 0, 0);
+                } else {
+                    printf("NOT IMPLEMENTED: x\n");
+                }
+            }
+            break;
+        case 'X':
+            {
+                if (currentNavigationMode == ABSOLUTE) {
+                    doAdjustEyePoint(-speed, 0, 0);
+                } else {
+                    printf("NOT IMPLEMENTED: x\n");
+                }
+            }
+            break;
+        case 'y':
+            doAdjustEyePoint(0, speed, 0);
+            break;
+        case 'Y':
+            doAdjustEyePoint(0, -speed, 0);
+            break;
+        case 'z':
+            doAdjustEyePoint(0, 0, speed);
+            break;
+        case 'Z':
+            doAdjustEyePoint(0, 0, -speed);
+            break;
+        case 'a':
+            {
+                if (currentNavigationMode == ABSOLUTE) {
+                    doAdjustLookatPoint(speed, 0, 0);
+                } else {
+                    printf("NOT IMPLEMENTED\n");
+                }
+            }
+            break;
+        case 'A':
+            doAdjustLookatPoint(-speed, 0, 0);
+            break;
+        case 'b':
+            doAdjustLookatPoint(0, speed, 0);
+            break;
+        case 'B':
+            doAdjustLookatPoint(0, -speed, 0);
+            break;
+        case 'c':
+            doAdjustLookatPoint(0, 0, speed);
+            break;
+        case 'C':
+            doAdjustLookatPoint(0, 0, -speed);
+            break;
+        case 'd':
+            {
+                if (currentNavigationMode == ABSOLUTE) {
+                    doAdjustUpVector(speed, 0, 0);
+                } else {
+                    printf("NOT IMPLEMENTED\n");
+                }
+            }
+            break;
+        case 'D':
+            doAdjustUpVector(-speed, 0, 0);
+            break;
+        case 'e':
+            {
+                if (currentNavigationMode == ABSOLUTE) {
+                    doAdjustUpVector(0, speed, 0);
+                } else {
+                    printf("NOT IMPLEMENTED\n");
+                }
+            }
+            break;
+        case 'E':
+            doAdjustUpVector(0, -speed, 0);
+            break;
+        case 'f':
+            doAdjustUpVector(0, 0, speed);
+            break;
+        case 'F':
+            doAdjustUpVector(0, 0, -speed);
+            break;
+        case '-':
+            {
+                speed = speed - 0.1;
+                if (speed < 0) {
+                    speed = 0;
+                }
+            }
+            break;
+        case '=':
+            {
+                speed = speed + 0.1;
+            }
             break;
         case 'w':
-        case 'e':
-        case 'y':
         case 'p':
-        case 'a':
         case 's':
-        case 'd':
-        case 'f':
-        case 'z':
-        case 'x':
-        case 'c':
-        case 'b':
             printf("Key press not implemented: %c\n", key);
         default:
             break;
@@ -168,8 +294,6 @@ void display_callback( void ){
     
     // retrieve the currently active window
     current_window = glutGetWindow();
-
-    printf("Currently active window: %d \n", current_window);
 
     hour = (hour + 1) % 240;
     int hourRotation = hour/240.0 * 360;
@@ -193,24 +317,48 @@ void display_callback( void ){
 
     positionCamera(current_window);
 
+    if (current_window != 1) {
+        // draw the mother
+        glPushMatrix();
+        glColor3f(0, 1, 1);
+        glTranslatef(motherShip[0], motherShip[1], motherShip[2]);
+        glutSolidCone(1, 4, 8, 2);
+        glPopMatrix();
+    }
+
+    if (current_window != 2) {
+        // draw the scout
+        glPushMatrix();
+        glColor3f(0, 1, 0);
+        glTranslatef(scoutShip[0], scoutShip[1], scoutShip[2]);
+        glutSolidCone(1, 4, 8, 2);
+        glPopMatrix();
+    }
+
     glPushMatrix();                     // root of solar hierarchy
 
-    glPushMatrix();                     // sun
-    glColor3f(1, 1, 0);
-    glRotatef(hourRotation, 0, 0.5, 0.5);
-    glutSolidSphere(0.3, 10, 10);
-    glPopMatrix();                      // end sun
+    for (int i = 0; i < 10; i++) {
+        drawPlanet(planetInfo[i][0], planetInfo[i][1], 1, 0, 0);
+    }
+    // glPushMatrix();                     // sun
+    // glColor3f(1, 1, 0);
+    // glRotatef(hourRotation, 0, 0.5, 0.5);
+    // glutSolidSphere(0.3, 10, 10);
+    // glPopMatrix();                      // end sun
 
-    glPushMatrix();                     // mercury
-    glColor3f(1, 0, 0);
-    glRotatef(rotation, 0, 1, 0);
-    glTranslatef(-1, 0, 0);
-    glRotatef(hourRotation, 0, 0.5, 0.5);
-    glutSolidSphere(0.3, 6, 6);
-    glPopMatrix();                      // end mercury
+    drawPlanet(planetInfo[1][0], planetInfo[1][1], 1, 0, 0);
+    // glPushMatrix();                     // mercury
+    // glColor3f(1, 0, 0);
+    // drawOrbit(planetInfo[0][1]);
+    // glRotatef(rotation, 0, 1, 0);
+    // glTranslatef(planetInfo[0][1], 0, 0);
+    // glRotatef(hourRotation, 0, 0.5, 0.5);
+    // glutSolidSphere(planetInfo[0][0], 6, 6);
+    // glPopMatrix();                      // end mercury
 
     glPushMatrix();                     // venus
     glColor3f(0.4, 0.3, 0.4);
+    drawOrbit(1.5);
     glRotatef(rotation, 0, 1, 0);
     glTranslatef(-1.5, 0, 0);
     glRotatef(hourRotation, 0, 0.5, 0.5);
@@ -219,6 +367,7 @@ void display_callback( void ){
 
     glPushMatrix();                     // earth
     glColor3f(0.9, 0.1, 0.9);
+    drawOrbit(2);
     glRotatef(rotation, 0, 1, 0);
     glTranslatef(-2, 0, 0);
 
@@ -234,6 +383,7 @@ void display_callback( void ){
 
     glPushMatrix();                     // mars
     glColor3f(0.3, 0.5, 0.9);
+    drawOrbit(2.5);
     glRotatef(rotation, 0, 1, 0);
     glTranslatef(-2.5, 0, 0);
     glRotatef(hourRotation, 0, 0.5, 0.5);
@@ -242,6 +392,7 @@ void display_callback( void ){
 
     glPushMatrix();                     // jupiter
     glColor3f(0.3, 0.9, 0.9);
+    drawOrbit(3);
     glRotatef(rotation, 0, 1, 0);
     glTranslatef(-3, 0, 0);
     glRotatef(hourRotation, 0, 0.5, 0.5);
@@ -250,14 +401,20 @@ void display_callback( void ){
 
     glPushMatrix();                     // saturn
     glColor3f(0.1, 0.1, 0.9);
+    drawOrbit(3.5);
     glRotatef(rotation, 0, 1, 0);
     glTranslatef(-3.5, 0, 0);
+    drawOrbit(0.25);
+    drawOrbit(0.3);
+    drawOrbit(0.35);
+    drawOrbit(0.4);
     glRotatef(hourRotation, 0, 0.5, 0.5);
     glutSolidSphere(0.3, 10, 10);
     glPopMatrix();                      // end saturn
 
     glPushMatrix();                     // uranus
     glColor3f(0.6, 0.9, 0.2);
+    drawOrbit(4);
     glRotatef(rotation, 0, 1, 0);
     glTranslatef(-4, 0, 0);
     glRotatef(hourRotation, 0, 0.5, 0.5);
@@ -266,6 +423,7 @@ void display_callback( void ){
 
     glPushMatrix();                     // neptune
     glColor3f(0.9, 0.3, 0.9);
+    drawOrbit(4.5);
     glRotatef(rotation, 0, 1, 0);
     glTranslatef(-4.5, 0, 0);
     glRotatef(hourRotation, 0, 0.5, 0.5);
@@ -274,6 +432,7 @@ void display_callback( void ){
 
     glPushMatrix();                     // pluto
     glColor3f(0.3, 0.1, 0.5);
+    drawOrbit(5);
     glRotatef(rotation, 0, 1, 0);
     glTranslatef(-5, 0, 0);
     glRotatef(hourRotation, 0, 0.5, 0.5);
@@ -346,13 +505,94 @@ void drawAxis() {
 
 void positionCamera(int cameraId) {
 
+    float extra = 1; // TODO-rm
+
     if (cameraId == 1) {
-        gluLookAt(0, 6, 6, 0, 0, 0, 0, 1, 0);
+        gluLookAt(  motherShip[0], motherShip[1], motherShip[2],
+                    motherShip[3], motherShip[4], motherShip[5],
+                    motherShip[6], motherShip[7], motherShip[8]);
     } else if (cameraId == 2) {
-        gluLookAt(0, 1, 1, 0, 0, 0, 0, 1, 0);
+        gluLookAt(  scoutShip[0], scoutShip[1], scoutShip[2],
+                    scoutShip[3], scoutShip[4], scoutShip[5],
+                    scoutShip[6], scoutShip[7], scoutShip[8]);
     } else {
         printf("Invalid camera id: %d\n", cameraId);
     }
+}
+
+void doAdjustEyePoint(float x, float y, float z) {
+    if (currentShipControl == SCOUT) {
+        scoutShip[0] += x;
+        scoutShip[1] += y;
+        scoutShip[2] += z;
+    } else if (currentShipControl == MOTHER) {
+        motherShip[0] += x;
+        motherShip[1] += y;
+        motherShip[2] += z;
+    } else {
+        printf("Not implemented\n");
+    }
+}
+
+void doAdjustLookatPoint(float x, float y, float z) {
+    if (currentShipControl == SCOUT) {
+        scoutShip[3] += x;
+        scoutShip[4] += y;
+        scoutShip[5] += z;
+    } else if (currentShipControl == MOTHER) {
+        motherShip[3] += x;
+        motherShip[4] += y;
+        motherShip[5] += z;
+    } else {
+        printf("Not implemented\n");
+    }
+}
+
+void doAdjustUpVector(float x, float y, float z) {
+    if (currentShipControl == SCOUT) {
+        scoutShip[6] += x;
+        scoutShip[7] += y;
+        scoutShip[8] += z;
+    } else if (currentShipControl == MOTHER) {
+        motherShip[6] += x;
+        motherShip[7] += y;
+        motherShip[8] += z;
+    } else {
+        printf("Not implemented\n");
+    }
+}
+
+void drawOrbit(float radius) {
+
+    float pi = 3.14;
+    float steps = 50;
+
+    glLineWidth(2);
+    glBegin(GL_LINE_LOOP);
+
+    for (int i = 0; i < steps; i++) {
+        float angle = (i/steps) * 2 * pi;
+        float x = radius * sin(angle);
+        float y = radius * cos(angle);
+        glVertex3f(x, 0, y);
+    }
+
+    glEnd();
+}
+
+void drawPlanet(float radius, float distanceFromSun, float r, float g, float b) {
+
+    int hourRotation = hour/240.0 * 360;
+    int rotation = day/365.0 * 360;
+
+    glPushMatrix();
+    glColor3f(r, g, b);
+    drawOrbit(distanceFromSun);
+    glRotatef(rotation, 0, 1, 0);
+    glTranslatef(distanceFromSun, 0, 0);
+    glRotatef(hourRotation, 0, 0.5, 0.5);
+    glutSolidSphere(radius, 6, 6);
+    glPopMatrix();
 }
 
 // inversion routine originally from MESA
@@ -495,7 +735,7 @@ int main( int argc, char **argv ){
     glutInit( &argc, argv );
     
     // use double-buffered RGB+Alpha framebuffers with a depth buffer.
-    glutInitDisplayMode( GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE );
+    glutInitDisplayMode( GLUT_RGBA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_MULTISAMPLE);
     
     // initialize the mothership window
     glutInitWindowSize( disp_width, disp_height );
@@ -512,7 +752,28 @@ int main( int argc, char **argv ){
     glutKeyboardFunc( keyboard_callback );
     glutDisplayFunc( display_callback );
     glutReshapeFunc( resize_callback );
+
+    // Initial ship locations and viewing angles
+    scoutShip[0] = 0;
+    scoutShip[1] = 6;
+    scoutShip[2] = -3;
+    scoutShip[3] = 0;
+    scoutShip[4] = 0;
+    scoutShip[5] = 0;
+    scoutShip[6] = 0;
+    scoutShip[7] = 1;
+    scoutShip[8] = 0;
     
+    motherShip[0] = 0;
+    motherShip[1] = 10;
+    motherShip[2] = -10;
+    motherShip[3] = 0;
+    motherShip[4] = 0;
+    motherShip[5] = 0;
+    motherShip[6] = 0;
+    motherShip[7] = 1;
+    motherShip[8] = 0;
+
     glutSetWindow( mother_window );
     init();
     glutSetWindow( scout_window );
