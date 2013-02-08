@@ -29,7 +29,7 @@ void doAdjustUpVector(float x, float y, float z);
 void drawOrbit(float radius);
 void drawPlanet(float* planet, float r, float g, float b);
 void doReset();
-void dumpMatrix();
+void dumpMatrix(float* m);
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -77,6 +77,14 @@ float planetInfo[10][2] = {
 
 SpaceShip currentShipControl = SCOUT;
 NavigationMode currentNavigationMode = ABSOLUTE;
+
+GLfloat motherShipViewMatrix[16];
+GLfloat scoutShipViewMatrix[16];
+
+float relativeMotion = 0;
+float relativeYaw = 0;
+float relativeRoll = 0;
+float relativePitch = 0;
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -159,7 +167,11 @@ void keyboard_callback( unsigned char key, int x, int y ){
             printf("Keyboard press for geosync on planet: %c\n", key);
             break;
         case 'q':
-            printf("Keyboard press for negative yaw: %c\n", key);
+            {
+                if (currentNavigationMode == RELATIVE) {
+                    relativeYaw = relativeYaw - speed;
+                } 
+            }
             break;
         case 'r':
             currentNavigationMode = RELATIVE;
@@ -185,8 +197,8 @@ void keyboard_callback( unsigned char key, int x, int y ){
             {
                 if (currentNavigationMode == ABSOLUTE) {
                     doAdjustEyePoint(speed, 0, 0);
-                } else {
-                    printf("NOT IMPLEMENTED: x\n");
+                } else if (currentNavigationMode == RELATIVE) {
+                    relativePitch = relativePitch - speed;
                 }
             }
             break;
@@ -215,8 +227,8 @@ void keyboard_callback( unsigned char key, int x, int y ){
             {
                 if (currentNavigationMode == ABSOLUTE) {
                     doAdjustLookatPoint(speed, 0, 0);
-                } else {
-                    printf("NOT IMPLEMENTED\n");
+                } else if (currentNavigationMode == RELATIVE) {
+                    relativeRoll = relativeRoll - speed;
                 }
             }
             break;
@@ -230,7 +242,13 @@ void keyboard_callback( unsigned char key, int x, int y ){
             doAdjustLookatPoint(0, -speed, 0);
             break;
         case 'c':
-            doAdjustLookatPoint(0, 0, speed);
+            {
+                if (currentNavigationMode == ABSOLUTE) {
+                    doAdjustLookatPoint(0, 0, speed);
+                } else if (currentNavigationMode == RELATIVE) {
+                    relativePitch = relativePitch + speed;
+                }
+            }
             break;
         case 'C':
             doAdjustLookatPoint(0, 0, -speed);
@@ -239,8 +257,8 @@ void keyboard_callback( unsigned char key, int x, int y ){
             {
                 if (currentNavigationMode == ABSOLUTE) {
                     doAdjustUpVector(speed, 0, 0);
-                } else {
-                    printf("NOT IMPLEMENTED\n");
+                } else if (currentNavigationMode == RELATIVE) {
+                    relativeRoll = relativeRoll + speed;
                 }
             }
             break;
@@ -251,6 +269,8 @@ void keyboard_callback( unsigned char key, int x, int y ){
             {
                 if (currentNavigationMode == ABSOLUTE) {
                     doAdjustUpVector(0, speed, 0);
+                } else if (currentNavigationMode == RELATIVE) {
+                    relativeYaw = relativeYaw + speed;
                 } else {
                     printf("NOT IMPLEMENTED\n");
                 }
@@ -285,8 +305,19 @@ void keyboard_callback( unsigned char key, int x, int y ){
             isPaused = !isPaused;
             break;
         case 'w':
+            {
+                if (currentNavigationMode == RELATIVE) {
+                    relativeMotion = relativeMotion + speed;
+                }
+            }
+            break;
         case 's':
-            printf("Key press not implemented: %c\n", key);
+            {
+                if (currentNavigationMode == RELATIVE) {
+                    relativeMotion = relativeMotion - speed;
+                }
+            }
+            break;
         default:
             break;
     }
@@ -325,21 +356,61 @@ void display_callback( void ){
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    positionCamera(current_window);
+    if (currentNavigationMode == ABSOLUTE) {
+        positionCamera(current_window);
+    } else if (currentNavigationMode == RELATIVE) {
+        
+        if (currentShipControl == MOTHER && current_window == 1) {
+            glRotatef(relativeYaw, 0, 1, 0);
+            glRotatef(relativePitch, 1, 0, 0);
+            glRotatef(relativeRoll, 0, 0, 1);
+            glTranslatef(0, 0, relativeMotion);
+            relativeMotion = 0;
+            relativeYaw = 0;
+            relativePitch = 0;
+            relativeRoll = 0;
+            
+        } else if (currentShipControl == SCOUT && current_window == 2) {
+            glRotatef(relativeYaw, 0, 1, 0);
+            glRotatef(relativePitch, 1, 0, 0);
+            glRotatef(relativeRoll, 0, 0, 1);
+            glTranslatef(0, 0, relativeMotion);
+            relativeMotion = 0;
+            relativeYaw = 0;
+            relativePitch = 0;
+            relativeRoll = 0;
+        }
+
+        if (current_window == 1) {
+            glMultMatrixf(motherShipViewMatrix);
+        } else if (current_window == 2) {
+            glMultMatrixf(scoutShipViewMatrix);
+        }
+        
+
+    } else if (currentNavigationMode == GEOSYNC) {
+        printf("NOT IMPLEMENTED\n");
+    } else {
+        printf("Unknown navigation mode\n");
+    }
 
     if (current_window == 1) {
-        printf("Mothership window:\n");
+        // printf("Mothership window:\n");
+        GLfloat m[16]; 
+        glGetFloatv(GL_MODELVIEW_MATRIX, m);
+        //dumpMatrix(m);
+        for (int i = 0; i < 16; i++) {
+            motherShipViewMatrix[i] = m[i];
+        }
     } else {
-        printf("Scoutship window:\n");
+        // printf("Scoutship window:\n");
+        GLfloat m[16]; 
+        glGetFloatv(GL_MODELVIEW_MATRIX, m);
+        //dumpMatrix(m);
+        for (int i = 0; i < 16; i++) {
+            scoutShipViewMatrix[i] = m[i];
+        }
     }
-
-    GLfloat matrix[16]; 
-    glGetFloatv (GL_MODELVIEW_MATRIX, matrix);
-    for (int i = 0; i < 4; i++) {
-        int base = i;
-        printf("%f \t %f \t %f \t %f \n", matrix[base], matrix[base + 4], matrix[base + 8], matrix[base + 12]);
-    }
-    printf("\n");
 
     if (current_window == 2) {
         // draw the mother
@@ -595,13 +666,11 @@ void doReset() {
     }
 }
 
-void dumpMatrix() {
+void dumpMatrix(float* m) {
 
-    GLfloat matrix[16]; 
-    glGetFloatv (GL_MODELVIEW_MATRIX, matrix);
     for (int i = 0; i < 4; i++) {
         int base = i;
-        printf("%f \t %f \t %f \t %f \n", matrix[base], matrix[base + 4], matrix[base + 8], matrix[base + 12]);
+        printf("%f \t %f \t %f \t %f \n", m[base], m[base + 4], m[base + 8], m[base + 12]);
     }
     printf("\n");
 }
