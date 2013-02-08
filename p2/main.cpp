@@ -27,7 +27,9 @@ void doAdjustEyePoint(float x, float y, float z);
 void doAdjustLookatPoint(float x, float y, float z);
 void doAdjustUpVector(float x, float y, float z);
 void drawOrbit(float radius);
-void drawPlanet(float radius, float distanceFromSun, float r, float g, float b);
+void drawPlanet(float* planet, float r, float g, float b);
+void doReset();
+void dumpMatrix();
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -56,19 +58,21 @@ float motherShip[9];
 
 float speed = 1;
 
+bool isPaused = false;
+
 // 9 planets
 // radius, distanceFromSun, 
 float planetInfo[10][2] = {
-    {1, 0},             // sun
-    {0.2, 1.3},           // mercury
-    {0.5, 1.7},          // venus
-    {0.4, 2.2},
-    {0.4, 3.2},
-    {0.4, 4.2},
-    {0.4, 5.2},
-    {0.4, 6.2},
-    {0.4, 7.2},
-    {0.4, 8.2}
+    {0.5, 0},             // sun
+    {0.2, 0.8},           // mercury
+    {0.3, 1.3},          // venus
+    {0.35, 2.2},
+    {0.3, 3.2},
+    {0.45, 4.2},
+    {0.64, 5.2},
+    {0.54, 6.2},
+    {0.34, 7.2},
+    {0.1, 8.2}
 };
 
 SpaceShip currentShipControl = SCOUT;
@@ -274,8 +278,13 @@ void keyboard_callback( unsigned char key, int x, int y ){
                 speed = speed + 0.1;
             }
             break;
-        case 'w':
+        case 'm':
+            doReset();
+            break;
         case 'p':
+            isPaused = !isPaused;
+            break;
+        case 'w':
         case 's':
             printf("Key press not implemented: %c\n", key);
         default:
@@ -295,16 +304,17 @@ void display_callback( void ){
     // retrieve the currently active window
     current_window = glutGetWindow();
 
-    hour = (hour + 1) % 240;
-    int hourRotation = hour/240.0 * 360;
+    if (!isPaused) {
+        hour = (hour + 1) % 240;
+        day = (day + 1) % 365;
+    }
 
-    day = (day + 1) % 365;
+    int hourRotation = hour/240.0 * 360;
     int rotation = day/365.0 * 360;
     
     // clear the color and depth buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
  
-
     /////////////////////////////////////////////////////////////
     /// TODO: Put your rendering code here! /////////////////////
     /////////////////////////////////////////////////////////////
@@ -317,129 +327,90 @@ void display_callback( void ){
 
     positionCamera(current_window);
 
-    if (current_window != 1) {
+    if (current_window == 1) {
+        printf("Mothership window:\n");
+    } else {
+        printf("Scoutship window:\n");
+    }
+
+    GLfloat matrix[16]; 
+    glGetFloatv (GL_MODELVIEW_MATRIX, matrix);
+    for (int i = 0; i < 4; i++) {
+        int base = i;
+        printf("%f \t %f \t %f \t %f \n", matrix[base], matrix[base + 4], matrix[base + 8], matrix[base + 12]);
+    }
+    printf("\n");
+
+    if (current_window == 2) {
         // draw the mother
         glPushMatrix();
         glColor3f(0, 1, 1);
         glTranslatef(motherShip[0], motherShip[1], motherShip[2]);
-        glutSolidCone(1, 4, 8, 2);
+        glutSolidCone(0.2, 0.4, 8, 2);
         glPopMatrix();
-    }
-
-    if (current_window != 2) {
+    } else if (current_window == 1) {
         // draw the scout
         glPushMatrix();
         glColor3f(0, 1, 0);
         glTranslatef(scoutShip[0], scoutShip[1], scoutShip[2]);
-        glutSolidCone(1, 4, 8, 2);
+        glutSolidCone(0.3, 0.6, 8, 2);
         glPopMatrix();
+    } else {
+        printf("Unknown window\n");
     }
 
     glPushMatrix();                     // root of solar hierarchy
 
-    for (int i = 0; i < 10; i++) {
-        drawPlanet(planetInfo[i][0], planetInfo[i][1], 1, 0, 0);
-    }
-    // glPushMatrix();                     // sun
-    // glColor3f(1, 1, 0);
-    // glRotatef(hourRotation, 0, 0.5, 0.5);
-    // glutSolidSphere(0.3, 10, 10);
-    // glPopMatrix();                      // end sun
+    glPushMatrix();                     // sun
+    drawPlanet(planetInfo[0], 1, 1, 0);
+    glPopMatrix();                      // end sun
 
-    drawPlanet(planetInfo[1][0], planetInfo[1][1], 1, 0, 0);
-    // glPushMatrix();                     // mercury
-    // glColor3f(1, 0, 0);
-    // drawOrbit(planetInfo[0][1]);
-    // glRotatef(rotation, 0, 1, 0);
-    // glTranslatef(planetInfo[0][1], 0, 0);
-    // glRotatef(hourRotation, 0, 0.5, 0.5);
-    // glutSolidSphere(planetInfo[0][0], 6, 6);
-    // glPopMatrix();                      // end mercury
+    glPushMatrix();                     // mercury
+    drawPlanet(planetInfo[1], 1, 0, 0);
+    glPopMatrix();                      // end mercury
 
     glPushMatrix();                     // venus
-    glColor3f(0.4, 0.3, 0.4);
-    drawOrbit(1.5);
-    glRotatef(rotation, 0, 1, 0);
-    glTranslatef(-1.5, 0, 0);
-    glRotatef(hourRotation, 0, 0.5, 0.5);
-    glutSolidSphere(0.3, 10, 10);
+    drawPlanet(planetInfo[2], 0.4, 0.3, 0.4);
     glPopMatrix();                      // end venus
 
     glPushMatrix();                     // earth
-    glColor3f(0.9, 0.1, 0.9);
-    drawOrbit(2);
-    glRotatef(rotation, 0, 1, 0);
-    glTranslatef(-2, 0, 0);
-
-    glPushMatrix();                     // earth's moon
-    glRotatef(rotation, 1, 0, 0);
-    glTranslatef(-0.25, -0.25, 0);
-    glutSolidSphere(0.1, 10, 10);
-    glPopMatrix();
-
-    glRotatef(hourRotation, 0, 0.5, 0.5);
-    glutSolidSphere(0.3, 10, 10);
+    drawPlanet(planetInfo[3], 0.9, 0.1, 0.9);
+        glPushMatrix();                     // earth's moon
+        drawOrbit(0.45);
+        glTranslatef(0.45, 0, 0);
+        glutSolidSphere(0.1, 10, 10);
+        glPopMatrix();
     glPopMatrix();                      // end earth
 
     glPushMatrix();                     // mars
-    glColor3f(0.3, 0.5, 0.9);
-    drawOrbit(2.5);
-    glRotatef(rotation, 0, 1, 0);
-    glTranslatef(-2.5, 0, 0);
-    glRotatef(hourRotation, 0, 0.5, 0.5);
-    glutSolidSphere(0.3, 10, 10);
+    drawPlanet(planetInfo[4], 0.3, 0.5, 0.9);
     glPopMatrix();                      // end mars
 
     glPushMatrix();                     // jupiter
-    glColor3f(0.3, 0.9, 0.9);
-    drawOrbit(3);
-    glRotatef(rotation, 0, 1, 0);
-    glTranslatef(-3, 0, 0);
-    glRotatef(hourRotation, 0, 0.5, 0.5);
-    glutSolidSphere(0.3, 10, 10);
+    drawPlanet(planetInfo[5], 0.3, 0.9, 0.9);
     glPopMatrix();                      // end jupiter
 
     glPushMatrix();                     // saturn
-    glColor3f(0.1, 0.1, 0.9);
-    drawOrbit(3.5);
-    glRotatef(rotation, 0, 1, 0);
-    glTranslatef(-3.5, 0, 0);
-    drawOrbit(0.25);
-    drawOrbit(0.3);
-    drawOrbit(0.35);
-    drawOrbit(0.4);
-    glRotatef(hourRotation, 0, 0.5, 0.5);
-    glutSolidSphere(0.3, 10, 10);
+    drawPlanet(planetInfo[6], 0.1, 0.1, 0.9);
+    drawOrbit(0.75);
+    drawOrbit(0.8);
+    drawOrbit(0.85);
+    drawOrbit(0.9);
     glPopMatrix();                      // end saturn
 
     glPushMatrix();                     // uranus
-    glColor3f(0.6, 0.9, 0.2);
-    drawOrbit(4);
-    glRotatef(rotation, 0, 1, 0);
-    glTranslatef(-4, 0, 0);
-    glRotatef(hourRotation, 0, 0.5, 0.5);
-    glutSolidSphere(0.3, 10, 10);
+    drawPlanet(planetInfo[7], 0.6, 0.9, 0.2);
     glPopMatrix();                      // end uranus
 
     glPushMatrix();                     // neptune
-    glColor3f(0.9, 0.3, 0.9);
-    drawOrbit(4.5);
-    glRotatef(rotation, 0, 1, 0);
-    glTranslatef(-4.5, 0, 0);
-    glRotatef(hourRotation, 0, 0.5, 0.5);
-    glutSolidSphere(0.3, 10, 10);
+    drawPlanet(planetInfo[8], 0.9, 0.3, 0.9);
     glPopMatrix();                      // end neptune
 
     glPushMatrix();                     // pluto
-    glColor3f(0.3, 0.1, 0.5);
-    drawOrbit(5);
-    glRotatef(rotation, 0, 1, 0);
-    glTranslatef(-5, 0, 0);
-    glRotatef(hourRotation, 0, 0.5, 0.5);
-    glutSolidSphere(0.3, 10, 10);
+    drawPlanet(planetInfo[9], 0.9, 0.8, 0.5);
     glPopMatrix();                      // end pluto
 
-    glPopMatrix();                      // end sun
+    glPopMatrix();                      // end solar hierarchy
 
     drawAxis();
 
@@ -580,19 +551,59 @@ void drawOrbit(float radius) {
     glEnd();
 }
 
-void drawPlanet(float radius, float distanceFromSun, float r, float g, float b) {
+void drawPlanet(float* planet, float r, float g, float b) {
 
     int hourRotation = hour/240.0 * 360;
     int rotation = day/365.0 * 360;
 
-    glPushMatrix();
     glColor3f(r, g, b);
-    drawOrbit(distanceFromSun);
+    drawOrbit(planet[1]);
     glRotatef(rotation, 0, 1, 0);
-    glTranslatef(distanceFromSun, 0, 0);
-    glRotatef(hourRotation, 0, 0.5, 0.5);
-    glutSolidSphere(radius, 6, 6);
-    glPopMatrix();
+    glTranslatef(planet[1], 0, 0);
+    glRotatef(hourRotation, 0, 0.9, 0.3);
+    glutSolidSphere(planet[0], 6, 6);
+}
+
+void doReset() {
+    if (currentNavigationMode == ABSOLUTE) {
+        // Initial ship locations and viewing angles
+        scoutShip[0] = -2;
+        scoutShip[1] = 2;
+        scoutShip[2] = -3;
+        scoutShip[3] = 0;
+        scoutShip[4] = 0;
+        scoutShip[5] = 0;
+        scoutShip[6] = 0;
+        scoutShip[7] = 1;
+        scoutShip[8] = 0;
+        
+        motherShip[0] = -4;
+        motherShip[1] = 8;
+        motherShip[2] = -6;
+        motherShip[3] = 0;
+        motherShip[4] = 0;
+        motherShip[5] = 0;
+        motherShip[6] = 0;
+        motherShip[7] = 1;
+        motherShip[8] = 0;
+    } else if (currentNavigationMode == RELATIVE) {
+        printf("NOT IMPLEMENTED\n");
+    } else if (currentNavigationMode == GEOSYNC) {
+        printf("NOT IMPLEMENTED\n");
+    } else {
+        printf("Unknown navigation mode\n");
+    }
+}
+
+void dumpMatrix() {
+
+    GLfloat matrix[16]; 
+    glGetFloatv (GL_MODELVIEW_MATRIX, matrix);
+    for (int i = 0; i < 4; i++) {
+        int base = i;
+        printf("%f \t %f \t %f \t %f \n", matrix[base], matrix[base + 4], matrix[base + 8], matrix[base + 12]);
+    }
+    printf("\n");
 }
 
 // inversion routine originally from MESA
@@ -753,26 +764,7 @@ int main( int argc, char **argv ){
     glutDisplayFunc( display_callback );
     glutReshapeFunc( resize_callback );
 
-    // Initial ship locations and viewing angles
-    scoutShip[0] = 0;
-    scoutShip[1] = 6;
-    scoutShip[2] = -3;
-    scoutShip[3] = 0;
-    scoutShip[4] = 0;
-    scoutShip[5] = 0;
-    scoutShip[6] = 0;
-    scoutShip[7] = 1;
-    scoutShip[8] = 0;
-    
-    motherShip[0] = 0;
-    motherShip[1] = 10;
-    motherShip[2] = -10;
-    motherShip[3] = 0;
-    motherShip[4] = 0;
-    motherShip[5] = 0;
-    motherShip[6] = 0;
-    motherShip[7] = 1;
-    motherShip[8] = 0;
+    doReset();
 
     glutSetWindow( mother_window );
     init();
