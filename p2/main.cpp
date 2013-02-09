@@ -32,6 +32,13 @@ void drawPlanet(float* planet, float r, float g, float b);
 void doReset();
 void dumpMatrix(float* m);
 bool invert_pose(float *m);
+void doUpdateGeosyncTarget(int planet);
+void doUpdateNavigationMode(NavigationMode mode);
+void doAdjustRelativeYaw(float yaw);
+void doAdjustRelativeRoll(float roll);
+void doAdjustRelativePitch(float pitch);
+void doAdjustRelativeMotion(float motion);
+void setupCamera();
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -78,7 +85,8 @@ float planetInfo[10][2] = {
 };
 
 SpaceShip currentShipControl = SCOUT;
-NavigationMode currentNavigationMode = ABSOLUTE;
+NavigationMode scoutNavigationMode = ABSOLUTE;
+NavigationMode motherNavigationMode = ABSOLUTE;
 
 GLfloat motherShipViewMatrix[16];
 GLfloat scoutShipViewMatrix[16];
@@ -88,7 +96,8 @@ float relativeYaw = 0;
 float relativeRoll = 0;
 float relativePitch = 0;
 
-int geosyncPlanetSelection = 3;
+int scoutGeosyncPlanetSelection = 3;
+int motherGeosyncPlanetSelection = 3;
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -160,86 +169,43 @@ void keyboard_callback( unsigned char key, int x, int y ){
             quit = true;
             break;
         case '1':
-            {
-                if (currentNavigationMode == GEOSYNC) {
-                    geosyncPlanetSelection = 1;
-                }
-            }
+            doUpdateGeosyncTarget(1);
             break;
         case '2':
-            {
-                if (currentNavigationMode == GEOSYNC) {
-                    geosyncPlanetSelection = 2;
-                }
-            }
+            doUpdateGeosyncTarget(2);
             break;
         case '3':
-            {
-                if (currentNavigationMode == GEOSYNC) {
-                    geosyncPlanetSelection = 3;
-                }
-            }
+            doUpdateGeosyncTarget(3);
             break;
         case '4':
-            {
-                if (currentNavigationMode == GEOSYNC) {
-                    geosyncPlanetSelection = 4;
-                }
-            }
+            doUpdateGeosyncTarget(4);
             break;
         case '5':
-            {
-                if (currentNavigationMode == GEOSYNC) {
-                    geosyncPlanetSelection = 5;
-                }
-            }
+            doUpdateGeosyncTarget(5);
             break;
         case '6':
-            {
-                if (currentNavigationMode == GEOSYNC) {
-                    geosyncPlanetSelection = 6;
-                }
-            }
+            doUpdateGeosyncTarget(6);
             break;
         case '7':
-            {
-                if (currentNavigationMode == GEOSYNC) {
-                    geosyncPlanetSelection = 7;
-                }
-            }
+            doUpdateGeosyncTarget(7);
             break;
         case '8':
-            {
-                if (currentNavigationMode == GEOSYNC) {
-                    geosyncPlanetSelection = 8;
-                }
-            }
+            doUpdateGeosyncTarget(8);
             break;
         case '9':
-            {
-                if (currentNavigationMode == GEOSYNC) {
-                    geosyncPlanetSelection = 9;
-                }
-            }
+            doUpdateGeosyncTarget(9);
             break;
         case 'q':
-            {
-                if (currentNavigationMode == RELATIVE) {
-                    relativeYaw = relativeYaw - speed;
-                } 
-            }
+            doAdjustRelativeYaw(-speed);
             break;
         case 'r':
-            currentNavigationMode = RELATIVE;
-            printf("Navigation mode set to RELATIVE\n");
+            doUpdateNavigationMode(RELATIVE);
             break;
         case 'g':
-            currentNavigationMode = GEOSYNC;
-            printf("Navigation mode set to GEOSYNC\n");
+            doUpdateNavigationMode(GEOSYNC);
             break;
         case 'l':
-            currentNavigationMode = ABSOLUTE;
-            printf("Navigation mode set to ABSOLUTE\n");
+            doUpdateNavigationMode(ABSOLUTE);
             break;
         case '<':
             currentShipControl = SCOUT;
@@ -250,22 +216,11 @@ void keyboard_callback( unsigned char key, int x, int y ){
             printf("Ship control set to MOTHER \n");
             break;
         case 'x':
-            {
-                if (currentNavigationMode == ABSOLUTE) {
-                    doAdjustEyePoint(speed, 0, 0);
-                } else if (currentNavigationMode == RELATIVE) {
-                    relativePitch = relativePitch - speed;
-                }
-            }
+            doAdjustEyePoint(speed, 0, 0);
+            doAdjustRelativePitch(-speed);
             break;
         case 'X':
-            {
-                if (currentNavigationMode == ABSOLUTE) {
-                    doAdjustEyePoint(-speed, 0, 0);
-                } else {
-                    printf("NOT IMPLEMENTED: x\n");
-                }
-            }
+            doAdjustEyePoint(-speed, 0, 0);
             break;
         case 'y':
             doAdjustEyePoint(0, speed, 0);
@@ -280,13 +235,8 @@ void keyboard_callback( unsigned char key, int x, int y ){
             doAdjustEyePoint(0, 0, -speed);
             break;
         case 'a':
-            {
-                if (currentNavigationMode == ABSOLUTE) {
-                    doAdjustLookatPoint(speed, 0, 0);
-                } else if (currentNavigationMode == RELATIVE) {
-                    relativeRoll = relativeRoll - speed;
-                }
-            }
+            doAdjustLookatPoint(speed, 0, 0);
+            doAdjustRelativeRoll(-speed);
             break;
         case 'A':
             doAdjustLookatPoint(-speed, 0, 0);
@@ -298,39 +248,22 @@ void keyboard_callback( unsigned char key, int x, int y ){
             doAdjustLookatPoint(0, -speed, 0);
             break;
         case 'c':
-            {
-                if (currentNavigationMode == ABSOLUTE) {
-                    doAdjustLookatPoint(0, 0, speed);
-                } else if (currentNavigationMode == RELATIVE) {
-                    relativePitch = relativePitch + speed;
-                }
-            }
+            doAdjustLookatPoint(0, 0, speed);
+            doAdjustRelativePitch(speed);
             break;
         case 'C':
             doAdjustLookatPoint(0, 0, -speed);
             break;
         case 'd':
-            {
-                if (currentNavigationMode == ABSOLUTE) {
-                    doAdjustUpVector(speed, 0, 0);
-                } else if (currentNavigationMode == RELATIVE) {
-                    relativeRoll = relativeRoll + speed;
-                }
-            }
+            doAdjustUpVector(speed, 0, 0);
+            doAdjustRelativeRoll(speed);
             break;
         case 'D':
             doAdjustUpVector(-speed, 0, 0);
             break;
         case 'e':
-            {
-                if (currentNavigationMode == ABSOLUTE) {
-                    doAdjustUpVector(0, speed, 0);
-                } else if (currentNavigationMode == RELATIVE) {
-                    relativeYaw = relativeYaw + speed;
-                } else {
-                    printf("NOT IMPLEMENTED\n");
-                }
-            }
+            doAdjustRelativeYaw(speed);
+            doAdjustUpVector(0, speed, 0); 
             break;
         case 'E':
             doAdjustUpVector(0, -speed, 0);
@@ -361,18 +294,10 @@ void keyboard_callback( unsigned char key, int x, int y ){
             isPaused = !isPaused;
             break;
         case 'w':
-            {
-                if (currentNavigationMode == RELATIVE) {
-                    relativeMotion = relativeMotion + speed;
-                }
-            }
+            doAdjustRelativeMotion(speed);
             break;
         case 's':
-            {
-                if (currentNavigationMode == RELATIVE) {
-                    relativeMotion = relativeMotion - speed;
-                }
-            }
+            doAdjustRelativeMotion(-speed);
             break;
         default:
             break;
@@ -412,63 +337,7 @@ void display_callback( void ){
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    if (currentNavigationMode == ABSOLUTE) {
-        positionCamera(current_window);
-    } else if (currentNavigationMode == RELATIVE) {
-        
-        if (currentShipControl == MOTHER && current_window == 1) {
-            glRotatef(relativeYaw, 0, 1, 0);
-            glRotatef(relativePitch, 1, 0, 0);
-            glRotatef(relativeRoll, 0, 0, 1);
-            glTranslatef(0, 0, relativeMotion);
-            relativeMotion = 0;
-            relativeYaw = 0;
-            relativePitch = 0;
-            relativeRoll = 0;
-            
-        } else if (currentShipControl == SCOUT && current_window == 2) {
-            glRotatef(relativeYaw, 0, 1, 0);
-            glRotatef(relativePitch, 1, 0, 0);
-            glRotatef(relativeRoll, 0, 0, 1);
-            glTranslatef(0, 0, relativeMotion);
-            relativeMotion = 0;
-            relativeYaw = 0;
-            relativePitch = 0;
-            relativeRoll = 0;
-        }
-
-        if (current_window == 1) {
-            glMultMatrixf(motherShipViewMatrix);
-        } else if (current_window == 2) {
-            glMultMatrixf(scoutShipViewMatrix);
-        }
-        
-
-    } else if (currentNavigationMode == GEOSYNC) {
-
-        int hourRotation = hour/240.0 * 360;
-        int rotation = day/365.0 * 360;
-
-        float *planet = planetInfo[geosyncPlanetSelection];
-        glPushMatrix();
-        glRotatef(rotation, 0, 1, 0);
-        glTranslatef(planet[1], 0, 0);
-        glRotatef(hourRotation, 0, 0.9, 0.3);
-        float planetCoord[16];
-        glGetFloatv(GL_MODELVIEW_MATRIX, planetCoord);
-        glPopMatrix();
-
-        bool inverted = invert_pose(planetCoord);
-        if (!inverted) {
-            printf("ERROR INVERTING MATRIX!\n");
-        }
-
-        glTranslatef(0, 0, -2);
-        glMultMatrixf(planetCoord);
-
-    } else {
-        printf("Unknown navigation mode\n");
-    }
+    setupCamera();
 
     if (current_window == 1) {
         // printf("Mothership window:\n");
@@ -639,16 +508,14 @@ void positionCamera(int cameraId) {
 }
 
 void doAdjustEyePoint(float x, float y, float z) {
-    if (currentShipControl == SCOUT) {
+    if (currentShipControl == SCOUT && scoutNavigationMode == ABSOLUTE) {
         scoutShip[0] += x;
         scoutShip[1] += y;
         scoutShip[2] += z;
-    } else if (currentShipControl == MOTHER) {
+    } else if (currentShipControl == MOTHER && motherNavigationMode == ABSOLUTE) {
         motherShip[0] += x;
         motherShip[1] += y;
         motherShip[2] += z;
-    } else {
-        printf("Not implemented\n");
     }
 }
 
@@ -667,16 +534,15 @@ void doAdjustLookatPoint(float x, float y, float z) {
 }
 
 void doAdjustUpVector(float x, float y, float z) {
-    if (currentShipControl == SCOUT) {
+
+    if (currentShipControl == SCOUT && scoutNavigationMode == ABSOLUTE) {
         scoutShip[6] += x;
         scoutShip[7] += y;
         scoutShip[8] += z;
-    } else if (currentShipControl == MOTHER) {
+    } else if (currentShipControl == MOTHER && motherNavigationMode == ABSOLUTE) {
         motherShip[6] += x;
         motherShip[7] += y;
         motherShip[8] += z;
-    } else {
-        printf("Not implemented\n");
     }
 }
 
@@ -712,34 +578,27 @@ void drawPlanet(float* planet, float r, float g, float b) {
 }
 
 void doReset() {
-    if (currentNavigationMode == ABSOLUTE) {
-        // Initial ship locations and viewing angles
-        scoutShip[0] = -2;
-        scoutShip[1] = 2;
-        scoutShip[2] = -3;
-        scoutShip[3] = 0;
-        scoutShip[4] = 0;
-        scoutShip[5] = 0;
-        scoutShip[6] = 0;
-        scoutShip[7] = 1;
-        scoutShip[8] = 0;
-        
-        motherShip[0] = -4;
-        motherShip[1] = 8;
-        motherShip[2] = -6;
-        motherShip[3] = 0;
-        motherShip[4] = 0;
-        motherShip[5] = 0;
-        motherShip[6] = 0;
-        motherShip[7] = 1;
-        motherShip[8] = 0;
-    } else if (currentNavigationMode == RELATIVE) {
-        printf("NOT IMPLEMENTED\n");
-    } else if (currentNavigationMode == GEOSYNC) {
-        printf("NOT IMPLEMENTED\n");
-    } else {
-        printf("Unknown navigation mode\n");
-    }
+
+    // Initial ship locations and viewing angles
+    scoutShip[0] = -2;
+    scoutShip[1] = 2;
+    scoutShip[2] = -3;
+    scoutShip[3] = 0;
+    scoutShip[4] = 0;
+    scoutShip[5] = 0;
+    scoutShip[6] = 0;
+    scoutShip[7] = 1;
+    scoutShip[8] = 0;
+    
+    motherShip[0] = -4;
+    motherShip[1] = 8;
+    motherShip[2] = -6;
+    motherShip[3] = 0;
+    motherShip[4] = 0;
+    motherShip[5] = 0;
+    motherShip[6] = 0;
+    motherShip[7] = 1;
+    motherShip[8] = 0;
 }
 
 void dumpMatrix(float* m) {
@@ -749,6 +608,145 @@ void dumpMatrix(float* m) {
         printf("%f \t %f \t %f \t %f \n", m[base], m[base + 4], m[base + 8], m[base + 12]);
     }
     printf("\n");
+}
+
+void doUpdateGeosyncTarget(int planet) {
+    
+    if (currentShipControl == SCOUT && scoutNavigationMode == GEOSYNC) {
+        scoutGeosyncPlanetSelection = planet;
+    } else if (currentShipControl == MOTHER && scoutNavigationMode == GEOSYNC) {
+        motherGeosyncPlanetSelection = planet;
+    }
+}
+
+void doUpdateNavigationMode(NavigationMode mode) {
+    if (currentShipControl == SCOUT) {
+        scoutNavigationMode = mode;
+    } else if (currentShipControl == MOTHER) {
+        motherNavigationMode = mode;
+    }
+}
+
+void doAdjustRelativeYaw(float yaw) {
+    if (currentShipControl == SCOUT && scoutNavigationMode == RELATIVE) {
+        relativeYaw = relativeYaw + yaw;
+    } else if (currentShipControl == MOTHER && motherNavigationMode == RELATIVE) {
+        relativeYaw = relativeYaw + yaw;
+    }
+}
+
+void doAdjustRelativeRoll(float roll) {
+    if (currentShipControl == SCOUT && scoutNavigationMode == RELATIVE) {
+        relativeRoll = relativeRoll + roll;
+    } else if (currentShipControl == MOTHER && motherNavigationMode == RELATIVE) {
+        relativeRoll = relativeRoll + roll;
+    }
+}
+
+void doAdjustRelativePitch(float pitch) {
+    if (currentShipControl == SCOUT && scoutNavigationMode == RELATIVE) {
+        relativePitch = relativePitch + pitch;
+    } else if (currentShipControl == MOTHER && motherNavigationMode == RELATIVE) {
+        relativePitch = relativePitch + pitch;
+    }
+}
+
+void doAdjustRelativeMotion(float motion) {
+    if (currentShipControl == SCOUT && scoutNavigationMode == RELATIVE) {
+        relativeMotion = relativeMotion + motion;
+    } else if (currentShipControl == MOTHER && motherNavigationMode == RELATIVE) {
+        relativeMotion = relativeMotion + motion;
+    }
+}
+
+void setupCamera() {
+
+    int current_window = glutGetWindow();
+
+    if (current_window == 1) {
+        
+        // mother view
+        if (motherNavigationMode == ABSOLUTE) {
+
+            positionCamera(current_window);
+
+        } else if (motherNavigationMode == RELATIVE) {
+
+            glRotatef(relativeYaw, 0, 1, 0);
+            glRotatef(relativePitch, 1, 0, 0);
+            glRotatef(relativeRoll, 0, 0, 1);
+            glTranslatef(0, 0, relativeMotion);
+            relativeMotion = 0;
+            relativeYaw = 0;
+            relativePitch = 0;
+            relativeRoll = 0;
+            glMultMatrixf(motherShipViewMatrix);
+
+        } else if (motherNavigationMode == GEOSYNC) {
+
+            int hourRotation = hour/240.0 * 360;
+            int rotation = day/365.0 * 360;
+
+            float *planet = planetInfo[motherGeosyncPlanetSelection];
+            glPushMatrix();
+            glRotatef(rotation, 0, 1, 0);
+            glTranslatef(planet[1], 0, 0);
+            glRotatef(hourRotation, 0, 0.9, 0.3);
+            float planetCoord[16];
+            glGetFloatv(GL_MODELVIEW_MATRIX, planetCoord);
+            glPopMatrix();
+
+            bool inverted = invert_pose(planetCoord);
+            if (!inverted) {
+                printf("ERROR INVERTING MATRIX!\n");
+            }
+
+            glTranslatef(0, 0, -2);
+            glMultMatrixf(planetCoord);
+        }
+    } else if (current_window == 2) {
+        
+        // scout view
+        // mother view
+        if (scoutNavigationMode == ABSOLUTE) {
+
+            positionCamera(current_window);
+
+        } else if (scoutNavigationMode == RELATIVE) {
+
+            glRotatef(relativeYaw, 0, 1, 0);
+            glRotatef(relativePitch, 1, 0, 0);
+            glRotatef(relativeRoll, 0, 0, 1);
+            glTranslatef(0, 0, relativeMotion);
+            relativeMotion = 0;
+            relativeYaw = 0;
+            relativePitch = 0;
+            relativeRoll = 0;
+            glMultMatrixf(scoutShipViewMatrix);
+
+        } else if (scoutNavigationMode == GEOSYNC) {
+
+            int hourRotation = hour/240.0 * 360;
+            int rotation = day/365.0 * 360;
+
+            float *planet = planetInfo[scoutGeosyncPlanetSelection];
+            glPushMatrix();
+            glRotatef(rotation, 0, 1, 0);
+            glTranslatef(planet[1], 0, 0);
+            glRotatef(hourRotation, 0, 0.9, 0.3);
+            float planetCoord[16];
+            glGetFloatv(GL_MODELVIEW_MATRIX, planetCoord);
+            glPopMatrix();
+
+            bool inverted = invert_pose(planetCoord);
+            if (!inverted) {
+                printf("ERROR INVERTING MATRIX!\n");
+            }
+
+            glTranslatef(0, 0, -2);
+            glMultMatrixf(planetCoord);
+        }
+    }
 }
 
 // inversion routine originally from MESA
