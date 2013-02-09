@@ -39,6 +39,8 @@ void doAdjustRelativeRoll(float roll);
 void doAdjustRelativePitch(float pitch);
 void doAdjustRelativeMotion(float motion);
 void setupCamera();
+int planetRotationAngle(float* planet);
+void doAdjustGeosyncDistance(float distance);
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -74,7 +76,7 @@ bool isPaused = false;
 float planetInfo[10][2] = {
     {0.5, 0},             // sun
     {0.2, 0.8},           // mercury
-    {0.3, 1.3},          // venus
+    {0.3, 1.3},          // venus ...
     {0.35, 2.2},
     {0.3, 3.2},
     {0.45, 4.2},
@@ -91,13 +93,22 @@ NavigationMode motherNavigationMode = ABSOLUTE;
 GLfloat motherShipViewMatrix[16];
 GLfloat scoutShipViewMatrix[16];
 
-float relativeMotion = 0;
-float relativeYaw = 0;
-float relativeRoll = 0;
-float relativePitch = 0;
+float scoutRelativeMotion = 0;
+float scoutRelativeYaw = 0;
+float scoutRelativeRoll = 0;
+float scoutRelativePitch = 0;
+
+float motherRelativeMotion = 0;
+float motherRelativeYaw = 0;
+float motherRelativeRoll = 0;
+float motherRelativePitch = 0;
 
 int scoutGeosyncPlanetSelection = 3;
 int motherGeosyncPlanetSelection = 3;
+
+float scoutGeosyncDistance = 1.3;
+float motherGeosyncDistance = 1.3;
+
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -111,7 +122,7 @@ void init(){
     /////////////////////////////////////////////////////////////
     /// TODO: Put your initialization code here! ////////////////
     /////////////////////////////////////////////////////////////
-    glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+    glClearColor( 0.1f, 0.1f, 0.1f, 0.0f );
 
     glViewport( 0, 0, glutGet(GLUT_WINDOW_WIDTH), glutGet(GLUT_WINDOW_HEIGHT) );
     glEnable( GL_DEPTH_TEST );
@@ -126,7 +137,7 @@ void init(){
     glLightfv( GL_LIGHT0, GL_AMBIENT, ambient );
     glLightfv( GL_LIGHT0, GL_DIFFUSE, diffuse );
     glLightfv( GL_LIGHT0, GL_SPECULAR, specular );
-    GLfloat position1[] = {-1.0, -1.0, -1.0, 0.0};
+    GLfloat position1[] = {-1.0, -10.0, -1.0, 0.0};
     glLightfv( GL_LIGHT1, GL_POSITION, position1 );
     glLightfv( GL_LIGHT1, GL_AMBIENT, ambient );
     glLightfv( GL_LIGHT1, GL_DIFFUSE, diffuse );
@@ -295,9 +306,11 @@ void keyboard_callback( unsigned char key, int x, int y ){
             break;
         case 'w':
             doAdjustRelativeMotion(speed);
+            doAdjustGeosyncDistance(speed);
             break;
         case 's':
             doAdjustRelativeMotion(-speed);
+            doAdjustGeosyncDistance(-speed);
             break;
         default:
             break;
@@ -320,9 +333,6 @@ void display_callback( void ){
         hour = (hour + 1) % 240;
         day = (day + 1) % 365;
     }
-
-    int hourRotation = hour/240.0 * 360;
-    int rotation = day/365.0 * 360;
     
     // clear the color and depth buffers
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -361,15 +371,32 @@ void display_callback( void ){
         // draw the mother
         glPushMatrix();
         glColor3f(0, 1, 1);
-        glTranslatef(motherShip[0], motherShip[1], motherShip[2]);
+        float motherView[16];
+
+        for (int i = 0; i < 16; i++) {
+            motherView[i] = motherShipViewMatrix[i];
+        }
+
+        bool inverted = invert_pose(motherView);
+        glMultMatrixf(motherView);
+        glTranslatef(0, 0.2, 0);
+        glutSolidSphere(0.2, 15, 15);
         glutSolidCone(0.2, 0.4, 8, 2);
         glPopMatrix();
     } else if (current_window == 1) {
         // draw the scout
         glPushMatrix();
         glColor3f(0, 1, 0);
-        glTranslatef(scoutShip[0], scoutShip[1], scoutShip[2]);
+        float scoutView[16];
+
+        for (int i = 0; i < 16; i++) {
+            scoutView[i] = scoutShipViewMatrix[i];
+        }
+
+        bool inverted = invert_pose(scoutView);
+        glMultMatrixf(scoutView);
         glutSolidCone(0.3, 0.6, 8, 2);
+        glutSolidSphere(0.29, 15, 15);
         glPopMatrix();
     } else {
         printf("Unknown window\n");
@@ -393,6 +420,7 @@ void display_callback( void ){
     drawPlanet(planetInfo[3], 0.9, 0.1, 0.9);
         glPushMatrix();                     // earth's moon
         drawOrbit(0.45);
+        glRotatef(day * 3, 0, 1, 0);
         glTranslatef(0.45, 0, 0);
         glutSolidSphere(0.1, 10, 10);
         glPopMatrix();
@@ -567,22 +595,27 @@ void drawOrbit(float radius) {
 void drawPlanet(float* planet, float r, float g, float b) {
 
     int hourRotation = hour/240.0 * 360;
-    int rotation = day/365.0 * 360;
+    int rotation = planetRotationAngle(planet);
 
     glColor3f(r, g, b);
     drawOrbit(planet[1]);
     glRotatef(rotation, 0, 1, 0);
     glTranslatef(planet[1], 0, 0);
     glRotatef(hourRotation, 0, 0.9, 0.3);
-    glutSolidSphere(planet[0], 6, 6);
+    glutSolidSphere(planet[0], 46, 46);
+}
+
+int planetRotationAngle(float* planet) {
+    int rotation = (day/365.0 * 360) - (planet[1] * 245);
+    return rotation;
 }
 
 void doReset() {
 
     // Initial ship locations and viewing angles
     scoutShip[0] = -2;
-    scoutShip[1] = 2;
-    scoutShip[2] = -3;
+    scoutShip[1] = 5;
+    scoutShip[2] = -7;
     scoutShip[3] = 0;
     scoutShip[4] = 0;
     scoutShip[5] = 0;
@@ -592,7 +625,7 @@ void doReset() {
     
     motherShip[0] = -4;
     motherShip[1] = 8;
-    motherShip[2] = -6;
+    motherShip[2] = -14;
     motherShip[3] = 0;
     motherShip[4] = 0;
     motherShip[5] = 0;
@@ -629,33 +662,41 @@ void doUpdateNavigationMode(NavigationMode mode) {
 
 void doAdjustRelativeYaw(float yaw) {
     if (currentShipControl == SCOUT && scoutNavigationMode == RELATIVE) {
-        relativeYaw = relativeYaw + yaw;
+        scoutRelativeYaw = scoutRelativeYaw + yaw;
     } else if (currentShipControl == MOTHER && motherNavigationMode == RELATIVE) {
-        relativeYaw = relativeYaw + yaw;
+        motherRelativeYaw = motherRelativeYaw + yaw;
     }
 }
 
 void doAdjustRelativeRoll(float roll) {
     if (currentShipControl == SCOUT && scoutNavigationMode == RELATIVE) {
-        relativeRoll = relativeRoll + roll;
+        scoutRelativeRoll = scoutRelativeRoll + roll;
     } else if (currentShipControl == MOTHER && motherNavigationMode == RELATIVE) {
-        relativeRoll = relativeRoll + roll;
+        motherRelativeRoll = motherRelativeRoll + roll;
     }
 }
 
 void doAdjustRelativePitch(float pitch) {
     if (currentShipControl == SCOUT && scoutNavigationMode == RELATIVE) {
-        relativePitch = relativePitch + pitch;
+        scoutRelativePitch = scoutRelativePitch + pitch;
     } else if (currentShipControl == MOTHER && motherNavigationMode == RELATIVE) {
-        relativePitch = relativePitch + pitch;
+        motherRelativePitch = motherRelativePitch + pitch;
     }
 }
 
 void doAdjustRelativeMotion(float motion) {
     if (currentShipControl == SCOUT && scoutNavigationMode == RELATIVE) {
-        relativeMotion = relativeMotion + motion;
+        scoutRelativeMotion = scoutRelativeMotion + motion;
     } else if (currentShipControl == MOTHER && motherNavigationMode == RELATIVE) {
-        relativeMotion = relativeMotion + motion;
+        motherRelativeMotion = motherRelativeMotion + motion;
+    }
+}
+
+void doAdjustGeosyncDistance(float distance) {
+    if (currentShipControl == SCOUT && scoutNavigationMode == GEOSYNC) {
+        scoutGeosyncDistance = scoutGeosyncDistance + distance;
+    } else if (currentShipControl == MOTHER && motherNavigationMode == GEOSYNC) {
+        motherGeosyncDistance = motherGeosyncDistance + distance;
     }
 }
 
@@ -672,22 +713,23 @@ void setupCamera() {
 
         } else if (motherNavigationMode == RELATIVE) {
 
-            glRotatef(relativeYaw, 0, 1, 0);
-            glRotatef(relativePitch, 1, 0, 0);
-            glRotatef(relativeRoll, 0, 0, 1);
-            glTranslatef(0, 0, relativeMotion);
-            relativeMotion = 0;
-            relativeYaw = 0;
-            relativePitch = 0;
-            relativeRoll = 0;
+            glRotatef(motherRelativeYaw, 0, 1, 0);
+            glRotatef(motherRelativePitch, 1, 0, 0);
+            glRotatef(motherRelativeRoll, 0, 0, 1);
+            glTranslatef(0, 0, motherRelativeMotion);
+            motherRelativeMotion = 0;
+            motherRelativeYaw = 0;
+            motherRelativePitch = 0;
+            motherRelativeRoll = 0;
             glMultMatrixf(motherShipViewMatrix);
 
         } else if (motherNavigationMode == GEOSYNC) {
 
-            int hourRotation = hour/240.0 * 360;
-            int rotation = day/365.0 * 360;
-
             float *planet = planetInfo[motherGeosyncPlanetSelection];
+
+            int hourRotation = hour/240.0 * 360;
+            int rotation = planetRotationAngle(planet);
+            
             glPushMatrix();
             glRotatef(rotation, 0, 1, 0);
             glTranslatef(planet[1], 0, 0);
@@ -701,7 +743,8 @@ void setupCamera() {
                 printf("ERROR INVERTING MATRIX!\n");
             }
 
-            glTranslatef(0, 0, -2);
+            glRotatef(10, 1, 0, 0);
+            glTranslatef(0, 0, -motherGeosyncDistance);
             glMultMatrixf(planetCoord);
         }
     } else if (current_window == 2) {
@@ -714,22 +757,23 @@ void setupCamera() {
 
         } else if (scoutNavigationMode == RELATIVE) {
 
-            glRotatef(relativeYaw, 0, 1, 0);
-            glRotatef(relativePitch, 1, 0, 0);
-            glRotatef(relativeRoll, 0, 0, 1);
-            glTranslatef(0, 0, relativeMotion);
-            relativeMotion = 0;
-            relativeYaw = 0;
-            relativePitch = 0;
-            relativeRoll = 0;
+            glRotatef(scoutRelativeYaw, 0, 1, 0);
+            glRotatef(scoutRelativePitch, 1, 0, 0);
+            glRotatef(scoutRelativeRoll, 0, 0, 1);
+            glTranslatef(0, 0, scoutRelativeMotion);
+            scoutRelativeMotion = 0;
+            scoutRelativeYaw = 0;
+            scoutRelativePitch = 0;
+            scoutRelativeRoll = 0;
             glMultMatrixf(scoutShipViewMatrix);
 
         } else if (scoutNavigationMode == GEOSYNC) {
 
-            int hourRotation = hour/240.0 * 360;
-            int rotation = day/365.0 * 360;
-
             float *planet = planetInfo[scoutGeosyncPlanetSelection];
+
+            int hourRotation = hour/240.0 * 360;
+            int rotation = planetRotationAngle(planet);
+
             glPushMatrix();
             glRotatef(rotation, 0, 1, 0);
             glTranslatef(planet[1], 0, 0);
@@ -743,7 +787,9 @@ void setupCamera() {
                 printf("ERROR INVERTING MATRIX!\n");
             }
 
-            glTranslatef(0, 0, -2);
+            
+            glTranslatef(0, 0, -scoutGeosyncDistance);
+            glRotatef(20, 1, 0, 0);
             glMultMatrixf(planetCoord);
         }
     }
