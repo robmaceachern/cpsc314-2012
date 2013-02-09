@@ -1,28 +1,9 @@
-Development Environment Usage:
-===============================================
-Windows: 
-Open the provided Visual Studio Solution (.sln) file in the visual_studio_project directory
+Robert MacEachern
+m9c7
+42415091
 
-Linux/Mac Eclipse:
-Import the project into your workspace as a C/C++ Makefile project as you did for Lab 0
+By submitting this ﬁle, I hereby declare that I worked individually on this assignment and that I am the
+only author of this code. I have listed all external resoures (web pages, books) used below. I have listed all
+people with whom I have had signiﬁcant discussions about the project below.
 
-File => Import => C/C++ => Existing Code as Makefile Project
-
-
-Command-Line Compilation:
-===============================================
-Linux/Mac: From the command line, type:
-
-> make -f Makefile.linux
-
-or
-
-> make -f Makefile.mac
-
-to build the framework and:
-
-> ./P2
-
-to run the demo.
-
-
+I implemented the three viewing/flying modes and each of the controls for the views.
