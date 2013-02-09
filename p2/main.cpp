@@ -17,6 +17,7 @@
 #include<iostream>
 #include<stdlib.h>
 #include<math.h>
+#include<stdio.h>
 
 enum SpaceShip { SCOUT, MOTHER };
 enum NavigationMode {ABSOLUTE, RELATIVE, GEOSYNC};
@@ -30,6 +31,7 @@ void drawOrbit(float radius);
 void drawPlanet(float* planet, float r, float g, float b);
 void doReset();
 void dumpMatrix(float* m);
+bool invert_pose(float *m);
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -85,6 +87,8 @@ float relativeMotion = 0;
 float relativeYaw = 0;
 float relativeRoll = 0;
 float relativePitch = 0;
+
+int geosyncPlanetSelection = 3;
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -156,15 +160,67 @@ void keyboard_callback( unsigned char key, int x, int y ){
             quit = true;
             break;
         case '1':
+            {
+                if (currentNavigationMode == GEOSYNC) {
+                    geosyncPlanetSelection = 1;
+                }
+            }
+            break;
         case '2':
+            {
+                if (currentNavigationMode == GEOSYNC) {
+                    geosyncPlanetSelection = 2;
+                }
+            }
+            break;
         case '3':
+            {
+                if (currentNavigationMode == GEOSYNC) {
+                    geosyncPlanetSelection = 3;
+                }
+            }
+            break;
         case '4':
+            {
+                if (currentNavigationMode == GEOSYNC) {
+                    geosyncPlanetSelection = 4;
+                }
+            }
+            break;
         case '5':
+            {
+                if (currentNavigationMode == GEOSYNC) {
+                    geosyncPlanetSelection = 5;
+                }
+            }
+            break;
         case '6':
+            {
+                if (currentNavigationMode == GEOSYNC) {
+                    geosyncPlanetSelection = 6;
+                }
+            }
+            break;
         case '7':
+            {
+                if (currentNavigationMode == GEOSYNC) {
+                    geosyncPlanetSelection = 7;
+                }
+            }
+            break;
         case '8':
+            {
+                if (currentNavigationMode == GEOSYNC) {
+                    geosyncPlanetSelection = 8;
+                }
+            }
+            break;
         case '9':
-            printf("Keyboard press for geosync on planet: %c\n", key);
+            {
+                if (currentNavigationMode == GEOSYNC) {
+                    geosyncPlanetSelection = 9;
+                }
+            }
             break;
         case 'q':
             {
@@ -389,7 +445,27 @@ void display_callback( void ){
         
 
     } else if (currentNavigationMode == GEOSYNC) {
-        printf("NOT IMPLEMENTED\n");
+
+        int hourRotation = hour/240.0 * 360;
+        int rotation = day/365.0 * 360;
+
+        float *planet = planetInfo[geosyncPlanetSelection];
+        glPushMatrix();
+        glRotatef(rotation, 0, 1, 0);
+        glTranslatef(planet[1], 0, 0);
+        glRotatef(hourRotation, 0, 0.9, 0.3);
+        float planetCoord[16];
+        glGetFloatv(GL_MODELVIEW_MATRIX, planetCoord);
+        glPopMatrix();
+
+        bool inverted = invert_pose(planetCoord);
+        if (!inverted) {
+            printf("ERROR INVERTING MATRIX!\n");
+        }
+
+        glTranslatef(0, 0, -2);
+        glMultMatrixf(planetCoord);
+
     } else {
         printf("Unknown navigation mode\n");
     }
