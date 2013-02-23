@@ -4,6 +4,186 @@
 		"selected_items":
 		[
 			[
+				"cur",
+				"currentShipControl"
+			],
+			[
+				"sc",
+				"scoutNavigationMode"
+			],
+			[
+				"curr",
+				"currentShipControl"
+			],
+			[
+				"doAdj",
+				"doAdjustGeosyncDistance"
+			],
+			[
+				"plan",
+				"planet"
+			],
+			[
+				"planet",
+				"planetRotationAngle"
+			],
+			[
+				"glutsol",
+				"glutSolidSphere"
+			],
+			[
+				"glm",
+				"glMultMatrixf"
+			],
+			[
+				"scou",
+				"scoutView"
+			],
+			[
+				"scout",
+				"scoutNavigationMode"
+			],
+			[
+				"curre",
+				"current_window"
+			],
+			[
+				"doAdju",
+				"doAdjustRelativePitch"
+			],
+			[
+				"doAd",
+				"doAdjustRelativeMotion"
+			],
+			[
+				"doAdjustRe",
+				"doAdjustRelativeMotion"
+			],
+			[
+				"doAdjust",
+				"doAdjustRelativePitch"
+			],
+			[
+				"rel",
+				"relativeYaw"
+			],
+			[
+				"cu",
+				"currentShipControl"
+			],
+			[
+				"doU",
+				"doUpdateNavigationMode"
+			],
+			[
+				"mother",
+				"motherNavigationMode"
+			],
+			[
+				"sco",
+				"scoutNavigationMode"
+			],
+			[
+				"pla",
+				"planet"
+			],
+			[
+				"moth",
+				"motherGeosyncPlanetSelection"
+			],
+			[
+				"scto",
+				"scoutGeosyncPlanetSelection"
+			],
+			[
+				"Nav",
+				"NavigationMode"
+			],
+			[
+				"geo",
+				"geosyncPlanetSelection"
+			],
+			[
+				"inv",
+				"inverted"
+			],
+			[
+				"inve",
+				"invert_pose"
+			],
+			[
+				"relat",
+				"relativeRoll"
+			],
+			[
+				"rela",
+				"RELATIVE"
+			],
+			[
+				"scoutS",
+				"scoutShipViewMatrix"
+			],
+			[
+				"GL",
+				"GL_MODELVIEW"
+			],
+			[
+				"R",
+				"RELATIVE"
+			],
+			[
+				"nav",
+				"NavigationMode"
+			],
+			[
+				"dra",
+				"drawOrbit"
+			],
+			[
+				"draw",
+				"drawPlanet"
+			],
+			[
+				"pl",
+				"planetInfo"
+			],
+			[
+				"ad",
+				"doAdjustEyePoint"
+			],
+			[
+				"num",
+				"numPoints"
+			],
+			[
+				"doAdjus",
+				"doAdjustUpVector"
+			],
+			[
+				"doA",
+				"doAdjustUpVector"
+			],
+			[
+				"pf",
+				"printf	printf …"
+			],
+			[
+				"pos",
+				"positionCamera"
+			],
+			[
+				"camer",
+				"cameraId"
+			],
+			[
+				"hou",
+				"hourRotation"
+			],
+			[
+				"glc",
+				"glColor3f"
+			],
+			[
 				"conv",
 				"convolution"
 			],
@@ -236,10 +416,6 @@
 				"error"
 			],
 			[
-				"num",
-				"numRemoved"
-			],
-			[
 				"roo",
 				"roomPrefix"
 			],
@@ -312,10 +488,6 @@
 				"appendTo"
 			],
 			[
-				"ad",
-				"addClass"
-			],
-			[
 				"app",
 				"appendTo"
 			],
@@ -342,178 +514,6 @@
 			[
 				"you",
 				"youtube-preview"
-			],
-			[
-				"scrol",
-				"scrollTop"
-			],
-			[
-				"scro",
-				"scrollTop"
-			],
-			[
-				"max",
-				"max-height"
-			],
-			[
-				"chat-",
-				"chat-message-other"
-			],
-			[
-				"di",
-				"display"
-			],
-			[
-				"bl",
-				"inline-block"
-			],
-			[
-				"send",
-				"sendfile"
-			],
-			[
-				"parse",
-				"parseInt"
-			],
-			[
-				"getRo",
-				"getRoomsForUserId"
-			],
-			[
-				"response",
-				"responseCode"
-			],
-			[
-				"len",
-				"length"
-			],
-			[
-				"messag",
-				"message-to-sever-failure"
-			],
-			[
-				"pas",
-				"passport"
-			],
-			[
-				"sess",
-				"session"
-			],
-			[
-				"av",
-				"avatar"
-			],
-			[
-				"avatar",
-				"avatarUrl"
-			],
-			[
-				"userIn",
-				"userInfoTemplate"
-			],
-			[
-				"default",
-				"defaultavatar"
-			],
-			[
-				"proto",
-				"prototype"
-			],
-			[
-				"join-room",
-				"join-room-failure"
-			],
-			[
-				"hand",
-				"handshake"
-			],
-			[
-				"specifi",
-				"specifying"
-			],
-			[
-				"db",
-				"dbClient"
-			],
-			[
-				"Room",
-				"RoomManager"
-			],
-			[
-				"d",
-				"dbUrl"
-			],
-			[
-				"query",
-				"queryKey"
-			],
-			[
-				"enco",
-				"encodedGeoHashNE"
-			],
-			[
-				"display",
-				"displayName"
-			],
-			[
-				"displa",
-				"displayName"
-			],
-			[
-				"se",
-				"sessionID"
-			],
-			[
-				"ses",
-				"sessionId"
-			],
-			[
-				"upd",
-				"updateUser"
-			],
-			[
-				"disp",
-				"displayName"
-			],
-			[
-				"fu",
-				"fullAuth"
-			],
-			[
-				"crea",
-				"createAuth"
-			],
-			[
-				"passwo",
-				"password"
-			],
-			[
-				"au",
-				"authPrefix"
-			],
-			[
-				"find",
-				"findUserById"
-			],
-			[
-				"pa",
-				"passwordHash"
-			],
-			[
-				"password",
-				"passwordHash"
-			],
-			[
-				"aut",
-				"authKey"
-			],
-			[
-				"a",
-				"authPrefix"
-			],
-			[
-				"pass",
-				"passwordHash"
 			]
 		]
 	},
@@ -576,9 +576,12 @@
 	},
 	"file_history":
 	[
+		"/Users/robmaceachern/Documents/workspace/opengl/cpsc314-2012/p1/cs314 p1/p1.cpp",
+		"/Users/robmaceachern/Documents/workspace/opengl/cpsc314-2012/p2/main.cpp",
+		"/Users/robmaceachern/Documents/workspace/opengl/cpsc314-2012/p2/README.txt",
+		"/Users/robmaceachern/Documents/workspace/opengl/cpsc314-2012/p2/P2",
 		"/Users/robmaceachern/Documents/workspace/opengl/cpsc314-2012/p2/Makefile",
 		"/Users/robmaceachern/Documents/workspace/opengl/cpsc314-2012/p2/Makefile.mac",
-		"/Users/robmaceachern/Documents/workspace/opengl/cpsc314-2012/p2/main.cpp",
 		"/Users/robmaceachern/Library/Application Support/Sublime Text 2/Packages/User/314build.sublime-build",
 		"/Users/robmaceachern/Documents/workspace/python/cpsc425-2012/a1/a1.py",
 		"/Users/robmaceachern/Documents/workspace/python/cpsc425-2012/a2/a2.py",
@@ -649,6 +652,63 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"relativeroll",
+			"doadjustr",
+			"doadjust",
+			"currentShipControl",
+			"doAdjustRelativeMotion",
+			"reset",
+			"drawor",
+			"geos",
+			"geosyncdi",
+			"relative",
+			"rotation",
+			"day/365.0 * 360",
+			"(day/365.0 * 360)",
+			"drawPlanet",
+			"speed",
+			"yaw",
+			"speed",
+			"doAdjustRelativeMotion",
+			"mother",
+			"doAdjustUpVector",
+			"relativePitch",
+			"doAdjustEyePoint",
+			"relativeYaw",
+			"doAdjustUpVector",
+			"currentnav",
+			"drawPlanet(f",
+			"relativeYAw",
+			"relativeya",
+			"drawplanet(",
+			"drawplanet(pl",
+			"drawplanet",
+			"dumpMatr",
+			"dumpM",
+			"matrix",
+			"displa",
+			"case:",
+			"positionCamera",
+			"doublev",
+			"floatv",
+			"reset",
+			"keyboar",
+			"positionCamera",
+			"clip",
+			"sun",
+			"glColor3f",
+			"drawplan",
+			"planet(",
+			"positionCamera",
+			"multi",
+			"init(",
+			"doincr",
+			"scout",
+			"current_win",
+			"init()",
+			"project",
+			"camera",
+			"keybo",
 			"multi",
 			"sum",
 			"assert",
@@ -719,64 +779,7 @@
 			"api/room",
 			"/api/ro",
 			"addta",
-			" auth",
-			"auth",
-			"anon",
-			"auth",
-			"getroombyi",
-			"getroom",
-			"/api/",
-			"/api",
-			"submit",
-			"chat-room",
-			"chat-room-in",
-			"input",
-			"log",
-			"addtab",
-			"chatlo",
-			"join-ro",
-			"chat-room-sub",
-			"socket.on",
-			"#",
-			":#",
-			"avatar:",
-			"message-to-ro",
-			"addta",
-			"master",
-			"head",
-			"dbclient",
-			"multi",
-			"master",
-			"generateRoomId",
-			"nan",
-			"faceboo",
-			"li>",
-			"addTab(",
-			"tab",
-			"roomid",
-			"numus",
-			"addtab",
-			"getroom",
-			"smembers",
-			"multi.ex",
-			"foreach",
-			"multi.ex",
-			"multi",
-			"parse",
-			"member",
-			"updawg-leave-room",
-			"room-id",
-			"roomPref",
-			"findUserBySessionId",
-			"room:",
-			"/api/user",
-			"general",
-			"\"room:",
-			"RoomMan",
-			"messag",
-			"local-an",
-			"authty",
-			"auth"
+			" auth"
 		],
 		"highlight": true,
 		"in_selection": false,

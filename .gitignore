@@ -1,4 +1,5 @@
 /p2/P2
+/p3/src/*.o
 
 #########################
 # .gitignore file for Xcode4 / OS X Source projects
