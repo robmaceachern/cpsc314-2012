@@ -40,6 +40,66 @@ Plane::intersect(Ray ray, double *depth,
 {
 	//////////*********** START OF CODE TO CHANGE *******////////////
 
+	Vec3 normalvec(	this->params[0],
+					this->params[1],
+					this->params[2]);
+
+	Vec3 dvec(	ray.direction[0],
+				ray.direction[1],
+				ray.direction[2]);
+
+	Vec3 evec(	ray.origin[0],
+				ray.origin[1],
+				ray.origin[2]);
+
+	// We need to find a point on the plane
+	Vec3 planePoint(0,0,0);
+
+	if (this->params[0] != 0) {
+
+		Vec3 point(this->params[3] / this->params[0],
+					0,
+					0);
+		planePoint = point;
+
+	} else if (this->params[1] != 0) {
+
+		Vec3 point(this->params[3] / this->params[1],
+					0,
+					0);
+		planePoint = point;
+
+	} else if (this->params[2] != 0) {
+
+		Vec3 point(this->params[3] / this->params[2],
+					0,
+					0);
+		planePoint = point;
+
+	} else {
+
+		printf("Something is fucked!!! Weird plane equation parameters! \n");
+
+	}
+
+	double t = normalvec.dot(planePoint.subtract(evec)) / (evec.dot(dvec));
+
+	if (t < 0 || t > 1) {
+
+		return false;
+
+	} else {
+
+		*depth = t;
+		*posX = (dvec[0] * t) + evec[0];
+		*posY =	(dvec[1] * t) + evec[1];
+		*posZ = (dvec[2] * t) + evec[2];
+		*normalX = normalvec[0];
+		*normalY = normalvec[1];
+		*normalZ = normalvec[2];
+
+	}
+
 	//////////*********** END OF CODE TO CHANGE *******////////////
 
 	return true;
@@ -72,8 +132,6 @@ Sphere::intersect(Ray ray, double *depth,
 {
 	//////////*********** START OF CODE TO CHANGE *******////////////
 
-	printf("ray.x: %f, ray.y: %f, ray.z: %f \n", ray.direction[0], ray.direction[1], ray.direction[2]);
-	
 	// from slides:
 	// (cx + t * vx)^2 + (cy + t * vy)^2 + (cz + t * vy)^2 = r^2
 
@@ -104,8 +162,6 @@ Sphere::intersect(Ray ray, double *depth,
 
 	Vec3 eMinusCvec = evec.subtract(cvec);
 	double c = eMinusCvec.dot(eMinusCvec) - (this->radius * this->radius);
-
-	printf("a: %f, b: %f, c: %f \n", a, b, c);
 
 	// discriminant: b^2 + 4ac
 	double discriminant = (b * b) + (4 * a * c);
@@ -145,12 +201,14 @@ Sphere::intersect(Ray ray, double *depth,
 
 		*depth = t;
 		
+		// position: (e + td)
 		Vec3 posvec = dvec.scale(t).add(evec);
 		*posX = posvec[0];
 		*posY = posvec[1];
 		*posZ = posvec[2];
 
-		Vec3 normalvec = posvec.subtract(cvec).scale(1 / this->radius);
+		// normal: 2(p - c)
+		Vec3 normalvec = posvec.subtract(cvec).scale(2);
 		*normalX = normalvec[0];
 		*normalY = normalvec[1];
 		*normalZ = normalvec[2];
@@ -158,7 +216,6 @@ Sphere::intersect(Ray ray, double *depth,
 
 	//////////*********** END OF CODE TO CHANGE *******////////////
 
-	printf("Intersection with sphere\n");
 	return true;
 }
 

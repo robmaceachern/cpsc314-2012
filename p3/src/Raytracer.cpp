@@ -281,9 +281,14 @@ Raytracer::shade(	double posX, double posY, double posZ,
 {
 
 	// calculate emissive part here
-	*red   = 1.0;
-	*green = 1.0;
-	*blue  = 1.0;
+	*red   = material.emission[0];
+	*green = material.emission[1];
+	*blue  = material.emission[2];
+
+	Vec3 nvec(	normalX,
+				normalY,
+				normalZ);
+	nvec.normalize();
 
 	foreach(light, (*lights), vector<PointLight>) {
 
@@ -294,6 +299,36 @@ Raytracer::shade(	double posX, double posY, double posZ,
 		// make sure to add the light attenuation
 		// effect for the diffuse and specular term
 
+		Vec3 lvec(	light->position[0] - posX,
+					light->position[1] - posY,
+					light->position[2] - posZ);
+		// TODO-rm no clue what I'm doing
+		double attenuation = 1 / (light->attenuation[2] * (lvec.length() * lvec.length()) + light->attenuation[1] * lvec.length() + light->attenuation[0]);
+		lvec.normalize();
+
+		Vec3 vvec(	camera->position[0] - posX, 
+					camera->position[1] - posY,
+					camera->position[2] - posZ);
+		vvec.normalize();
+
+		Vec3 hvec = lvec.add(vvec).scale(0.5);
+		hvec.normalize();
+
+		double lightingTotals[3];
+		int i;
+		for (i = 0; i < 3; i++) {
+
+			// https://piazza.com/class#winterterm22012/cpsc314/93
+			double intensity = light->ambient[i] + light->diffuse[i] * attenuation + light->specular[i] * attenuation;
+			//printf("intensity: %f \n", intensity);
+
+			double ambient = material.ambient[i] * light->ambient[i];
+			double diffuse = material.diffuse[i] * intensity * fmaxf(i, nvec.dot(lvec));
+			double specular = material.specular[i] * intensity * pow(fmaxf(i, nvec.dot(hvec)), material.shininess);
+
+			lightingTotals[i] = diffuse + specular + ambient;
+		}
+		
 		/////////////////////////////////////////////////////////////////////////////////////
 		// shoot a ray to every light source to see if the point is in shadow
 
@@ -314,6 +349,11 @@ Raytracer::shade(	double posX, double posY, double posZ,
 		//////////*********** START OF CODE TO CHANGE *******////////////
 
 		// add calculated color to final color
+
+		//printf("r: %f, g: %f, b: %f \n", lightingTotals[0], lightingTotals[1], lightingTotals[2]);
+		*red += lightingTotals[0];
+		*green += lightingTotals[1];
+		*blue += lightingTotals[2];
 
 		//////////*********** END OF CODE TO CHANGE *******////////////
 	}	

@@ -202,16 +202,35 @@ FileParser::parse(	const char *filename,		std::vector<PointLight> *lights,
 			
 			//////////*********** START OF CODE TO CHANGE *******////////////
 
-			// insert your code here and write result in variable camera!
+			// read next line - position
+			in.getline(currentLine,256);
+			istringstream(currentLine) >> camera->position[0] >> camera->position[1] >> camera->position[2];
+			
+			// read next line - lookAt
+			in.getline(currentLine,256);
+			istringstream(currentLine) >> camera->center[0] >> camera->center[1] >> camera->center[2];
+			
+			// read next line - up
+			in.getline(currentLine,256);
+			istringstream(currentLine) >> camera->up[0] >> camera->up[1] >> camera->up[2];
+			
+			// read next line - verticalFieldOfView and aspect
+			in.getline(currentLine,256);
+			istringstream(currentLine) >> camera->fovy >> camera->aspect;
+			
+			// read next line - zNear zFar
+			in.getline(currentLine,256);
+			istringstream(currentLine) >> camera->zNear >> camera->zFar;
+			
 
 			//////////*********** END OF CODE TO CHANGE *******////////////			
 
-			//cout << "Camera: " << endl;
-			//cout << camera->position[0] << ", " << camera->position[1] << ", " << camera->position[2]<< endl;
-			//cout << camera->center[0] << ", " << camera->center[1] << ", " << camera->center[2]<< endl;
-			//cout << camera->up[0] << ", " << camera->up[1] << ", " << camera->up[2]<< endl;
-			//cout << camera->fovy << ", " << camera->aspect << endl;
-			//cout << camera->zNear << ", " << camera->zFar << endl << endl;
+			cout << "Camera: " << endl;
+			cout << camera->position[0] << ", " << camera->position[1] << ", " << camera->position[2]<< endl;
+			cout << camera->center[0] << ", " << camera->center[1] << ", " << camera->center[2]<< endl;
+			cout << camera->up[0] << ", " << camera->up[1] << ", " << camera->up[2]<< endl;
+			cout << camera->fovy << ", " << camera->aspect << endl;
+			cout << camera->zNear << ", " << camera->zFar << endl << endl;
 
 		}
 
@@ -227,11 +246,11 @@ FileParser::parse(	const char *filename,		std::vector<PointLight> *lights,
 
 			//////////*********** START OF CODE TO CHANGE *******////////////
 
-			// insert your code here and write result in resolution[0] and resolution[1]
+			istringstream(line.substr(10,line.size())) >> resolution[0] >> resolution[1];
 
 			//////////*********** END OF CODE TO CHANGE *******////////////	
 			
-			//cout << "Resolution : " << resolution[0] << "x" << resolution[1] << endl << endl;
+			cout << "Resolution : " << resolution[0] << "x" << resolution[1] << endl << endl;
 		}
 	}
 
