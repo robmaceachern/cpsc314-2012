@@ -40,49 +40,76 @@ Plane::intersect(Ray ray, double *depth,
 {
 	//////////*********** START OF CODE TO CHANGE *******////////////
 
-	Vec3 normalvec(	this->params[0],
-					this->params[1],
-					this->params[2]);
+	// made use of this tutorial
+	// http://blogs.warwick.ac.uk/nickforrington/entry/raytracing_intersection_with/
+	// return false;
+	// Vec3 normalvec(	this->params[0],
+	// 				this->params[1],
+	// 				this->params[2]);
+
+	// Vec3 dvec(	ray.direction[0],
+	// 			ray.direction[1],
+	// 			ray.direction[2]);
+
+	// Vec3 evec(	ray.origin[0],
+	// 			ray.origin[1],
+	// 			ray.origin[2]);
+
+	// // We need to find a point on the plane
+	// Vec3 planePoint(0,0,0);
+
+	// if (this->params[0] != 0) {
+
+	// 	Vec3 point(this->params[3] / this->params[0],
+	// 				0,
+	// 				0);
+	// 	planePoint = point;
+
+	// } else if (this->params[1] != 0) {
+
+	// 	Vec3 point(this->params[3] / this->params[1],
+	// 				0,
+	// 				0);
+	// 	planePoint = point;
+
+	// } else if (this->params[2] != 0) {
+
+	// 	Vec3 point(this->params[3] / this->params[2],
+	// 				0,
+	// 				0);
+	// 	planePoint = point;
+
+	// } else {
+
+	// 	printf("Something is fucked!!! Weird plane equation parameters! \n");
+
+	// }
+
+	// double t = normalvec.dot(planePoint.subtract(evec)) / (evec.dot(dvec));
+
+	// I called this the evec in sphere intersection, but I wanted to keep 
+	// things consistent with the tutorial I was using.
+	Vec3 ovec(	ray.origin[0],
+				ray.origin[1],
+				ray.origin[2]);
+
+	Vec3 nvec(	this->params[0],
+				this->params[1],
+				this->params[2]);
 
 	Vec3 dvec(	ray.direction[0],
 				ray.direction[1],
 				ray.direction[2]);
 
-	Vec3 evec(	ray.origin[0],
-				ray.origin[1],
-				ray.origin[2]);
+	double d = this->params[3];
+	double t = -1;
+	double denom = dvec.dot(nvec);
 
-	// We need to find a point on the plane
-	Vec3 planePoint(0,0,0);
+	if (denom > 0 || denom < 0) {
 
-	if (this->params[0] != 0) {
-
-		Vec3 point(this->params[3] / this->params[0],
-					0,
-					0);
-		planePoint = point;
-
-	} else if (this->params[1] != 0) {
-
-		Vec3 point(this->params[3] / this->params[1],
-					0,
-					0);
-		planePoint = point;
-
-	} else if (this->params[2] != 0) {
-
-		Vec3 point(this->params[3] / this->params[2],
-					0,
-					0);
-		planePoint = point;
-
-	} else {
-
-		printf("Something is fucked!!! Weird plane equation parameters! \n");
-
+		t = (-d - (ovec.dot(nvec))) / dvec.dot(nvec);
+		
 	}
-
-	double t = normalvec.dot(planePoint.subtract(evec)) / (evec.dot(dvec));
 
 	if (t < 0 || t > 1) {
 
@@ -91,12 +118,12 @@ Plane::intersect(Ray ray, double *depth,
 	} else {
 
 		*depth = t;
-		*posX = (dvec[0] * t) + evec[0];
-		*posY =	(dvec[1] * t) + evec[1];
-		*posZ = (dvec[2] * t) + evec[2];
-		*normalX = normalvec[0];
-		*normalY = normalvec[1];
-		*normalZ = normalvec[2];
+		*posX = (dvec[0] * t) + ovec[0];
+		*posY =	(dvec[1] * t) + ovec[1];
+		*posZ = (dvec[2] * t) + ovec[2];
+		*normalX = nvec[0];
+		*normalY = nvec[1];
+		*normalZ = nvec[2];
 
 	}
 
@@ -163,8 +190,8 @@ Sphere::intersect(Ray ray, double *depth,
 	Vec3 eMinusCvec = evec.subtract(cvec);
 	double c = eMinusCvec.dot(eMinusCvec) - (this->radius * this->radius);
 
-	// discriminant: b^2 + 4ac
-	double discriminant = (b * b) + (4 * a * c);
+	// discriminant: b^2 - 4ac
+	double discriminant = (b * b) - (4 * a * c);
 
 	// From text: If the discriminant is negative, its square root 
 	// is imaginary and the line and sphere do not intersect.
@@ -215,7 +242,7 @@ Sphere::intersect(Ray ray, double *depth,
 	}
 
 	//////////*********** END OF CODE TO CHANGE *******////////////
-	printf("Sphere intersection found (%f, %f, %f) \n", *posX, *posY, *posZ);
+	//printf("Sphere intersection found (%f, %f, %f) \n", *posX, *posY, *posZ);
 	return true;
 }
 
