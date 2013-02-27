@@ -4,6 +4,94 @@
 		"selected_items":
 		[
 			[
+				"pos",
+				"posZ"
+			],
+			[
+				"int",
+				"intensity"
+			],
+			[
+				"gre",
+				"green"
+			],
+			[
+				"ligh",
+				"lightingTotals"
+			],
+			[
+				"h",
+				"hvec"
+			],
+			[
+				"v",
+				"vvec"
+			],
+			[
+				"po",
+				"posX"
+			],
+			[
+				"norm",
+				"normalize"
+			],
+			[
+				"param",
+				"parameter"
+			],
+			[
+				"plan",
+				"planePoint"
+			],
+			[
+				"nor",
+				"normalvec"
+			],
+			[
+				"no",
+				"normalX"
+			],
+			[
+				"pla",
+				"planePoint"
+			],
+			[
+				"do",
+				"dot"
+			],
+			[
+				"fo",
+				"fovy"
+			],
+			[
+				"ste",
+				"stepy"
+			],
+			[
+				"pixel",
+				"pixelLookAt"
+			],
+			[
+				"ap",
+				"alpha"
+			],
+			[
+				"ray",
+				"rayDirection"
+			],
+			[
+				"norma",
+				"normalX"
+			],
+			[
+				"mater",
+				"material"
+			],
+			[
+				"is",
+				"istringstream"
+			],
+			[
 				"cur",
 				"currentShipControl"
 			],
@@ -18,10 +106,6 @@
 			[
 				"doAdj",
 				"doAdjustGeosyncDistance"
-			],
-			[
-				"plan",
-				"planet"
 			],
 			[
 				"planet",
@@ -82,10 +166,6 @@
 			[
 				"sco",
 				"scoutNavigationMode"
-			],
-			[
-				"pla",
-				"planet"
 			],
 			[
 				"moth",
@@ -166,10 +246,6 @@
 			[
 				"pf",
 				"printf	printf …"
-			],
-			[
-				"pos",
-				"positionCamera"
 			],
 			[
 				"camer",
@@ -438,87 +514,67 @@
 			[
 				"mess",
 				"messageBoxBody"
-			],
-			[
-				"messageBox",
-				"messageBoxFrom"
-			],
-			[
-				"resp",
-				"response"
-			],
-			[
-				"error",
-				"errorMessage"
-			],
-			[
-				"inpu",
-				"inputContainer"
-			],
-			[
-				"tb",
-				"tabContent"
-			],
-			[
-				"el",
-				"element"
-			],
-			[
-				"chat",
-				"chatMessage"
-			],
-			[
-				"get",
-				"getChatlog"
-			],
-			[
-				"ev",
-				"event"
-			],
-			[
-				"back",
-				"backgroundColorForMessage"
-			],
-			[
-				"ava",
-				"avatarUrlForMessage"
-			],
-			[
-				"appen",
-				"appendTo"
-			],
-			[
-				"app",
-				"appendTo"
-			],
-			[
-				"tab",
-				"tabContent"
-			],
-			[
-				"mes",
-				"messagearea"
-			],
-			[
-				"clear",
-				"clearFix"
-			],
-			[
-				"me",
-				"messageBoxBody"
-			],
-			[
-				"add",
-				"addUserToRoom"
-			],
-			[
-				"you",
-				"youtube-preview"
 			]
 		]
 	},
 	"buffers":
 	[
+		{
+			"file": "p3/include/Primitives.h",
+			"settings":
+			{
+				"buffer_size": 4372,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "p3/src/FileParser.cpp",
+			"settings":
+			{
+				"buffer_size": 10155,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "p3/src/Raytracer.cpp",
+			"settings":
+			{
+				"buffer_size": 15033,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "p3/demo/testscene.ray",
+			"settings":
+			{
+				"buffer_size": 2170,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "p3/include/Raytracer.h",
+			"settings":
+			{
+				"buffer_size": 1906,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "p3/include/Operations.h",
+			"settings":
+			{
+				"buffer_size": 2297,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "p2/main.cpp",
+			"settings":
+			{
+				"buffer_size": 28169,
+				"line_ending": "Unix"
+			}
+		}
 	],
 	"build_system": "Packages/User/314build.sublime-build",
 	"command_palette":
@@ -576,8 +632,10 @@
 	},
 	"file_history":
 	[
-		"/Users/robmaceachern/Documents/workspace/opengl/cpsc314-2012/p1/cs314 p1/p1.cpp",
+		"/Users/robmaceachern/Documents/workspace/opengl/cpsc314-2012/p3/src/Primitives.cpp",
+		"/Users/robmaceachern/Documents/workspace/opengl/cpsc314-2012/p3/src/FileParser.cpp",
 		"/Users/robmaceachern/Documents/workspace/opengl/cpsc314-2012/p2/main.cpp",
+		"/Users/robmaceachern/Documents/workspace/opengl/cpsc314-2012/p1/cs314 p1/p1.cpp",
 		"/Users/robmaceachern/Documents/workspace/opengl/cpsc314-2012/p2/README.txt",
 		"/Users/robmaceachern/Documents/workspace/opengl/cpsc314-2012/p2/P2",
 		"/Users/robmaceachern/Documents/workspace/opengl/cpsc314-2012/p2/Makefile",
@@ -652,6 +710,30 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"dontcare",
+			"0",
+			"light",
+			"atten",
+			"print",
+			"material.ambient",
+			"camera->center",
+			".direction[",
+			"direction",
+			"pixelRay",
+			"ray",
+			"traceRay(",
+			"intersect(",
+			"intersect",
+			"min",
+			"vec",
+			"vector",
+			"vec3",
+			"center",
+			"sphere",
+			"attenuation",
+			"shininess",
+			"light",
+			"material",
 			"relativeroll",
 			"doadjustr",
 			"doadjust",
@@ -755,31 +837,7 @@
 			"infowindow",
 			"infowindow.",
 			"spider",
-			"marker",
-			"add",
-			"spider",
-			"overlapping",
-			"message-from",
-			"close",
-			"Chat",
-			"join-ro",
-			"join-rr",
-			".log",
-			".err",
-			".warn",
-			".log(",
-			".length > 0)",
-			"if (reply.le",
-			"if (*length",
-			"errorMess",
-			"api/user",
-			"users",
-			"loadroom",
-			"api/ro",
-			"api/room",
-			"/api/ro",
-			"addta",
-			" auth"
+			"marker"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -799,8 +857,198 @@
 	"groups":
 	[
 		{
+			"selected": 2,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "p3/include/Primitives.h",
+					"settings":
+					{
+						"buffer_size": 4372,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3596,
+								3596
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2012.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "p3/src/FileParser.cpp",
+					"settings":
+					{
+						"buffer_size": 10155,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								9276,
+								9276
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2840.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "p3/src/Raytracer.cpp",
+					"settings":
+					{
+						"buffer_size": 15033,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								13554,
+								13554
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 6803.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "p3/demo/testscene.ray",
+					"settings":
+					{
+						"buffer_size": 2170,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								739,
+								742
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 946.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "p3/include/Raytracer.h",
+					"settings":
+					{
+						"buffer_size": 1906,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								642,
+								642
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 442.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "p3/include/Operations.h",
+					"settings":
+					{
+						"buffer_size": 2297,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1926,
+								1926
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 581.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "p2/main.cpp",
+					"settings":
+					{
+						"buffer_size": 28169,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								14778,
+								14780
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 8572.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
 			]
 		},
 		{

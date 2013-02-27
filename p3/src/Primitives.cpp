@@ -215,7 +215,7 @@ Sphere::intersect(Ray ray, double *depth,
 	}
 
 	//////////*********** END OF CODE TO CHANGE *******////////////
-
+	printf("Sphere intersection found (%f, %f, %f) \n", *posX, *posY, *posZ);
 	return true;
 }
 

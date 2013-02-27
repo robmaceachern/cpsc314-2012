@@ -234,7 +234,33 @@ Raytracer::traceRay(	Ray pixelRay,
 			(*currRayRecursion) += 1;
 
 			//////////*********** START OF CODE TO CHANGE *******////////////
+			
+			// TODO-rm review
+			Vec3 i(	pixelRay.direction[0],
+					pixelRay.direction[1],
+					pixelRay.direction[2]);
 
+			Vec3 n(	intersectNormal[0],
+					intersectNormal[1],
+					intersectNormal[2]);
+
+			double idn = 2 * i.dot(n);
+			Vec3 reflect(	i[0] - idn * n[0],
+							i[1] - idn * n[1],
+							i[2] - idn * n[2]);
+
+			Ray reflectRay(intersectPos[0], intersectPos[1], intersectPos[2], reflect[0], reflect[1], reflect[2]);
+
+			double r = *red;
+			double g = *green;
+			double b = *blue;
+			double d = *depth;
+
+			this->traceRay(reflectRay, lights, planes, spheres, camera, currRayRecursion, &r, &g, &b, &d);
+
+			*red = (1 - intersectMaterial.reflect) * (*red) + intersectMaterial.reflect * r;
+			*green = (1 - intersectMaterial.reflect) * (*green) + intersectMaterial.reflect * g;
+			*blue = (1 - intersectMaterial.reflect) * (*blue) + intersectMaterial.reflect * b;
 			//////////*********** END OF CODE TO CHANGE *******////////////
 
 		}
@@ -302,7 +328,8 @@ Raytracer::shade(	double posX, double posY, double posZ,
 		Vec3 lvec(	light->position[0] - posX,
 					light->position[1] - posY,
 					light->position[2] - posZ);
-		// TODO-rm no clue what I'm doing
+		// TODO-rm no clue what I'm doing with this
+		// I think lvec.length() represents the distance from the point to the light
 		double attenuation = 1 / (light->attenuation[2] * (lvec.length() * lvec.length()) + light->attenuation[1] * lvec.length() + light->attenuation[0]);
 		lvec.normalize();
 
@@ -323,10 +350,10 @@ Raytracer::shade(	double posX, double posY, double posZ,
 			//printf("intensity: %f \n", intensity);
 
 			double ambient = material.ambient[i] * light->ambient[i];
-			double diffuse = material.diffuse[i] * intensity * fmaxf(i, nvec.dot(lvec));
-			double specular = material.specular[i] * intensity * pow(fmaxf(i, nvec.dot(hvec)), material.shininess);
+			double diffuse = material.diffuse[i] * intensity * fmaxf(0, nvec.dot(lvec));
+			double specular = material.specular[i] * intensity * pow(fmaxf(0, nvec.dot(hvec)), material.shininess);
 
-			lightingTotals[i] = diffuse + specular + ambient;
+			lightingTotals[i] = ambient + diffuse + specular;
 		}
 		
 		/////////////////////////////////////////////////////////////////////////////////////
@@ -334,11 +361,29 @@ Raytracer::shade(	double posX, double posY, double posZ,
 
 		//////////*********** END OF CODE TO CHANGE *******////////////
 
+		bool inShadow=false;
 		if(material.shadow != 0.0) {
 
 			//////////*********** START OF CODE TO CHANGE *******////////////
 
 			// add your code for shadows here
+			Ray shadowRay(posX, posY, posZ,
+							(light->position[0] - posX),(light->position[1] - posY),(light->position[2] - posZ));
+			
+			// calculate intersection of ray with all spheres
+			foreach(s, (*spheres), vector<Sphere>) {
+
+				double garbage;
+				if (s->intersect(shadowRay, &garbage, &garbage, &garbage, &garbage, &garbage, &garbage, &garbage)){
+				
+					*red *= (1 - material.shadow);
+					*green *= (1 - material.shadow);
+					*blue *= (1 - material.shadow);
+
+					inShadow = true;
+
+				}
+			}
 
 			//////////*********** END OF CODE TO CHANGE *******////////////
 		}
@@ -351,10 +396,11 @@ Raytracer::shade(	double posX, double posY, double posZ,
 		// add calculated color to final color
 
 		//printf("r: %f, g: %f, b: %f \n", lightingTotals[0], lightingTotals[1], lightingTotals[2]);
-		*red += lightingTotals[0];
-		*green += lightingTotals[1];
-		*blue += lightingTotals[2];
-
+		if (!inShadow) {
+			*red += lightingTotals[0];
+			*green += lightingTotals[1];
+			*blue += lightingTotals[2];
+		}
 		//////////*********** END OF CODE TO CHANGE *******////////////
 	}	
 }
