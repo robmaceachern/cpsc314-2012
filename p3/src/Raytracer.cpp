@@ -199,12 +199,6 @@ Raytracer::traceRay(	Ray pixelRay,
 				intersectPos[0]=iPos[0]; intersectPos[1]=iPos[1]; intersectPos[2]=iPos[2];
 				intersectNormal[0]=iNormal[0]; intersectNormal[1]=iNormal[1]; intersectNormal[2]=iNormal[2];
 				intersectMaterial = p->material;
-
-				if (*currRayRecursion > 1) {
-					printf("recursive ray intersection with plane\n");
-					printf("intersectNormal %f, %f, %f\n", intersectNormal[0], intersectNormal[1], intersectNormal[2]);
-					printf("currRayRecursion %d \n", *currRayRecursion);
-				}
 			}
 		}		
 	}
