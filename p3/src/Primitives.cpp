@@ -40,56 +40,7 @@ Plane::intersect(Ray ray, double *depth,
 {
 	//////////*********** START OF CODE TO CHANGE *******////////////
 
-	// made use of this tutorial
-	// http://blogs.warwick.ac.uk/nickforrington/entry/raytracing_intersection_with/
-	// return false;
-	// Vec3 normalvec(	this->params[0],
-	// 				this->params[1],
-	// 				this->params[2]);
-
-	// Vec3 dvec(	ray.direction[0],
-	// 			ray.direction[1],
-	// 			ray.direction[2]);
-
-	// Vec3 evec(	ray.origin[0],
-	// 			ray.origin[1],
-	// 			ray.origin[2]);
-
-	// // We need to find a point on the plane
-	// Vec3 planePoint(0,0,0);
-
-	// if (this->params[0] != 0) {
-
-	// 	Vec3 point(this->params[3] / this->params[0],
-	// 				0,
-	// 				0);
-	// 	planePoint = point;
-
-	// } else if (this->params[1] != 0) {
-
-	// 	Vec3 point(this->params[3] / this->params[1],
-	// 				0,
-	// 				0);
-	// 	planePoint = point;
-
-	// } else if (this->params[2] != 0) {
-
-	// 	Vec3 point(this->params[3] / this->params[2],
-	// 				0,
-	// 				0);
-	// 	planePoint = point;
-
-	// } else {
-
-	// 	printf("Something is fucked!!! Weird plane equation parameters! \n");
-
-	// }
-
-	// double t = normalvec.dot(planePoint.subtract(evec)) / (evec.dot(dvec));
-
-	// I called this the evec in sphere intersection, but I wanted to keep 
-	// things consistent with the tutorial I was using.
-	Vec3 ovec(	ray.origin[0],
+	Vec3 evec(	ray.origin[0],
 				ray.origin[1],
 				ray.origin[2]);
 
@@ -101,26 +52,26 @@ Plane::intersect(Ray ray, double *depth,
 				ray.direction[1],
 				ray.direction[2]);
 
-	double d = this->params[3];
+	double d = this->params[3] * sqrt(nvec[0] * nvec[0] + nvec[1] * nvec[1] + nvec[2] * nvec[2]);
 	double t = -1;
 	double denom = dvec.dot(nvec);
 
-	if (denom > 0 || denom < 0) {
+	if (denom != 0) {
 
-		t = (-d - (ovec.dot(nvec))) / dvec.dot(nvec);
-		
+		t = (-d - (evec.dot(nvec))) / dvec.dot(nvec);
+
 	}
 
-	if (t < 0 || t > 1) {
+	if (t <= 0 || t > 1) {
 
 		return false;
 
 	} else {
 
 		*depth = t;
-		*posX = (dvec[0] * t) + ovec[0];
-		*posY =	(dvec[1] * t) + ovec[1];
-		*posZ = (dvec[2] * t) + ovec[2];
+		*posX = (dvec[0] * t) + evec[0];
+		*posY =	(dvec[1] * t) + evec[1];
+		*posZ = (dvec[2] * t) + evec[2];
 		*normalX = nvec[0];
 		*normalY = nvec[1];
 		*normalZ = nvec[2];
@@ -128,7 +79,9 @@ Plane::intersect(Ray ray, double *depth,
 	}
 
 	//////////*********** END OF CODE TO CHANGE *******////////////
-
+	//printf("dvec[0], dvec[1], dvec[2]: (%f, %f, %f) \n", dvec[0], dvec[1], dvec[2]);
+	//printf("evec[0], evec[1], evec[2]: (%f, %f, %f) \n", evec[0], evec[1], evec[2]);
+	//printf("Plane interesection at t:%f (%f, %f, %f)\n", t, *posX, *posY, *posZ);
 	return true;
 }
 

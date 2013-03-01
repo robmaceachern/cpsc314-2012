@@ -235,32 +235,8 @@ Raytracer::traceRay(	Ray pixelRay,
 
 			//////////*********** START OF CODE TO CHANGE *******////////////
 			
-			// TODO-rm review
-			Vec3 i(	pixelRay.direction[0],
-					pixelRay.direction[1],
-					pixelRay.direction[2]);
+			// TODO-rm
 
-			Vec3 n(	intersectNormal[0],
-					intersectNormal[1],
-					intersectNormal[2]);
-
-			double idn = 2 * i.dot(n);
-			Vec3 reflect(	i[0] - idn * n[0],
-							i[1] - idn * n[1],
-							i[2] - idn * n[2]);
-
-			Ray reflectRay(intersectPos[0], intersectPos[1], intersectPos[2], reflect[0], reflect[1], reflect[2]);
-
-			double r = *red;
-			double g = *green;
-			double b = *blue;
-			double d = *depth;
-
-			this->traceRay(reflectRay, lights, planes, spheres, camera, currRayRecursion, &r, &g, &b, &d);
-
-			*red = (1 - intersectMaterial.reflect) * (*red) + intersectMaterial.reflect * r;
-			*green = (1 - intersectMaterial.reflect) * (*green) + intersectMaterial.reflect * g;
-			*blue = (1 - intersectMaterial.reflect) * (*blue) + intersectMaterial.reflect * b;
 			//////////*********** END OF CODE TO CHANGE *******////////////
 
 		}
@@ -316,6 +292,11 @@ Raytracer::shade(	double posX, double posY, double posZ,
 				normalZ);
 	nvec.normalize();
 
+	Vec3 vvec(	camera->position[0] - posX, 
+				camera->position[1] - posY,
+				camera->position[2] - posZ);
+	vvec.normalize();
+
 	foreach(light, (*lights), vector<PointLight>) {
 
 		//////////*********** START OF CODE TO CHANGE *******////////////
@@ -328,63 +309,79 @@ Raytracer::shade(	double posX, double posY, double posZ,
 		Vec3 lvec(	light->position[0] - posX,
 					light->position[1] - posY,
 					light->position[2] - posZ);
-		// TODO-rm no clue what I'm doing with this
-		// I think lvec.length() represents the distance from the point to the light
+
 		double attenuation = 1 / (light->attenuation[2] * (lvec.length() * lvec.length()) + light->attenuation[1] * lvec.length() + light->attenuation[0]);
 		lvec.normalize();
 
-		Vec3 vvec(	camera->position[0] - posX, 
-					camera->position[1] - posY,
-					camera->position[2] - posZ);
-		vvec.normalize();
+		Vec3 rvec = nvec.scale(nvec.dot(lvec)).scale(2).subtract(lvec);
+		rvec.normalize();
 
-		Vec3 hvec = lvec.add(vvec).scale(0.5);
-		hvec.normalize();
-
-		double lightingTotals[3];
+		double lightComponents[3];
 		int i;
 		for (i = 0; i < 3; i++) {
 
 			// https://piazza.com/class#winterterm22012/cpsc314/93
-			double intensity = light->ambient[i] + light->diffuse[i] * attenuation + light->specular[i] * attenuation;
+			double intensity = (light->diffuse[i] * attenuation) + (light->specular[i] * attenuation);
 			//printf("intensity: %f \n", intensity);
 
 			double ambient = material.ambient[i] * light->ambient[i];
-			double diffuse = material.diffuse[i] * intensity * fmaxf(0, nvec.dot(lvec));
-			double specular = material.specular[i] * intensity * pow(fmaxf(0, nvec.dot(hvec)), material.shininess);
 
-			lightingTotals[i] = ambient + diffuse + specular;
+			double nDotL = nvec.dot(lvec);
+
+			double diffuse = (nDotL > 0) ? material.diffuse[i] * intensity * fmaxf(0, nvec.dot(lvec)) : 0;
+			double specular = (nDotL > 0) ? material.specular[i] * intensity * pow(fmaxf(0, vvec.dot(rvec)), material.shininess) : 0;
+
+			lightComponents[i] = fminf(ambient + diffuse + specular, 1);
 		}
 		
 		/////////////////////////////////////////////////////////////////////////////////////
 		// shoot a ray to every light source to see if the point is in shadow
 
+		Vec3 toLightVec(light->position[0] - posX,
+						light->position[1] - posY,
+						light->position[2] - posZ);
+
+		Ray toLight(posX, posY, posZ,
+					toLightVec[0], 
+					toLightVec[1],
+					toLightVec[2]);
+
+		bool inShadow = false;
+
+		foreach(s, (*spheres), vector<Sphere>) {
+			
+			double iDepth, iPos[3], iNormal[3];
+
+			if( s->intersect(	toLight, &iDepth, 
+								&iPos[0], &iPos[1], &iPos[2],
+								&iNormal[0], &iNormal[1], &iNormal[2]))
+			{
+
+				// depth test
+				// We only count it if the intersection occurs between the point
+				// and the light (and not past the light).
+
+				if(iDepth <= toLightVec.length()) {
+					inShadow = true;
+					break;
+				}
+			}
+		}
+
 		//////////*********** END OF CODE TO CHANGE *******////////////
 
-		bool inShadow=false;
 		if(material.shadow != 0.0) {
 
 			//////////*********** START OF CODE TO CHANGE *******////////////
+			if (inShadow == true) {
 
-			// add your code for shadows here
-			Ray shadowRay(posX, posY, posZ,
-							(light->position[0] - posX),(light->position[1] - posY),(light->position[2] - posZ));
-			
-			// calculate intersection of ray with all spheres
-			foreach(s, (*spheres), vector<Sphere>) {
+				printf("Position of light that is shadowed: %f, %f, %f \n", light->position[0], light->position[1], light->position[2]);
+				lightComponents[0] *= (1 - material.shadow);
+				lightComponents[1] *= (1 - material.shadow);
+				lightComponents[2] *= (1 - material.shadow);
 
-				double garbage;
-				if (s->intersect(shadowRay, &garbage, &garbage, &garbage, &garbage, &garbage, &garbage, &garbage)){
-				
-					*red *= (1 - material.shadow);
-					*green *= (1 - material.shadow);
-					*blue *= (1 - material.shadow);
-
-					inShadow = true;
-
-				}
 			}
-
+			
 			//////////*********** END OF CODE TO CHANGE *******////////////
 		}
 
@@ -393,14 +390,14 @@ Raytracer::shade(	double posX, double posY, double posZ,
 
 		//////////*********** START OF CODE TO CHANGE *******////////////
 
+		// TODO-rm
 		// add calculated color to final color
 
-		//printf("r: %f, g: %f, b: %f \n", lightingTotals[0], lightingTotals[1], lightingTotals[2]);
-		if (!inShadow) {
-			*red += lightingTotals[0];
-			*green += lightingTotals[1];
-			*blue += lightingTotals[2];
-		}
+		
+		*red += lightComponents[0];
+		*green += lightComponents[1];
+		*blue += lightComponents[2];
+		
 		//////////*********** END OF CODE TO CHANGE *******////////////
 	}	
 }
