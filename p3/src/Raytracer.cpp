@@ -78,7 +78,13 @@ Raytracer::raytraceScene(	const char *filename,
 			// generate the appropriate ray for this pixel
 			
 			//////////*********** START OF CODE TO CHANGE *******////////////
-			
+
+			// the direction of the ray should be a vector 
+			// that is computed as pointOnFarPlane-pointOnNearPlan
+
+			// point = pointOnNearPlane + t*rayDirection
+
+
 			int alpha = x-resolution[0]/2;
 			int beta  = y-resolution[1]/2;
 			Vec3 pixelLookAt(	camera->center[0] + alpha*stepx*right[0] + beta*stepy*up[0],
@@ -197,6 +203,7 @@ Raytracer::traceRay(	Ray pixelRay,
 				if (*currRayRecursion > 1) {
 					printf("recursive ray intersection with plane\n");
 					printf("intersectNormal %f, %f, %f\n", intersectNormal[0], intersectNormal[1], intersectNormal[2]);
+					printf("currRayRecursion %d \n", *currRayRecursion);
 				}
 			}
 		}		
@@ -272,7 +279,7 @@ Raytracer::traceRay(	Ray pixelRay,
 				double redReflect = *red;
 				double greenReflect = *green;
 				double blueReflect = *blue;
-				double d = 1;
+				double d = DBL_MAX;
 
 				this->traceRay(secondaryRay, lights, planes, spheres, camera, currRayRecursion,
 						 &redReflect, &greenReflect, &blueReflect, &d);
