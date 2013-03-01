@@ -62,7 +62,7 @@ Plane::intersect(Ray ray, double *depth,
 
 	}
 
-	if (t <= 0 || t > 1) {
+	if (t <= 0) {
 
 		return false;
 
@@ -173,11 +173,11 @@ Sphere::intersect(Ray ray, double *depth,
 
 		double t = 0; // t is set to either tmin or tmax (or the function returns false)
 
-		if (tmin >= 0 && tmin <= 1) {
+		if (tmin >= 0) { //} && tmin <= 1) {
 
 			t = tmin;
 
-		} else if (tmax >= 0 && tmax <= 1) {
+		} else if (tmax >= 0) { //} && tmax <= 1) {
 
 			t = tmax;
 
@@ -199,6 +199,7 @@ Sphere::intersect(Ray ray, double *depth,
 
 		// normal: 2(p - c)
 		Vec3 normalvec = posvec.subtract(cvec).scale(2);
+		normalvec.normalize();
 		*normalX = normalvec[0];
 		*normalY = normalvec[1];
 		*normalZ = normalvec[2];

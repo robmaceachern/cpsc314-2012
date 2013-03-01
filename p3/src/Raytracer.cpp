@@ -96,14 +96,14 @@ Raytracer::raytraceScene(	const char *filename,
 								camera->position[1] + alpha*stepx*right[1] + beta*stepy*up[1],
 								camera->position[2] + alpha*stepx*right[2] + beta*stepy*up[2]);
 
-			Vec3 rayDirection(	pixelLookAt[0]-pixelStart[0], 
-								pixelLookAt[1]-pixelStart[1], 
-								pixelLookAt[2]-pixelStart[2]);
+			Vec3 rayDirection(	pixelLookAt[0]-camera->position[0], 
+								pixelLookAt[1]-camera->position[1], 
+								pixelLookAt[2]-camera->position[2]);
 			rayDirection.normalize();
 
-			Ray pixelRay(	pixelStart[0] + camera->zNear*rayDirection[0], 
-							pixelStart[1] + camera->zNear*rayDirection[1],
-							pixelStart[2] + camera->zNear*rayDirection[2],
+			Ray pixelRay(	camera->position[0], 
+							camera->position[1],
+							camera->position[2],
 							(camera->zFar-camera->zNear)*rayDirection[0],
 							(camera->zFar-camera->zNear)*rayDirection[1],
 							(camera->zFar-camera->zNear)*rayDirection[2]	);
@@ -254,7 +254,7 @@ Raytracer::traceRay(	Ray pixelRay,
 			Vec3 nvec(	intersectNormal[0],
 						intersectNormal[1],
 						intersectNormal[2]);
-			nvec.normalize();
+			//nvec.normalize();
 
 			Vec3 origRay(	pixelRay.direction[0],
 							pixelRay.direction[1],
@@ -276,9 +276,9 @@ Raytracer::traceRay(	Ray pixelRay,
 									iPoint[2] + correctionFactorZ,
 									reflectVec[0], reflectVec[1], reflectVec[2]);
 
-				double redReflect = *red;
-				double greenReflect = *green;
-				double blueReflect = *blue;
+				double redReflect = 0;
+				double greenReflect = 0;
+				double blueReflect = 0;
 				double d = DBL_MAX;
 
 				this->traceRay(secondaryRay, lights, planes, spheres, camera, currRayRecursion,
@@ -419,7 +419,6 @@ Raytracer::shade(	double posX, double posY, double posZ,
 				// depth test
 				// We only count it if the intersection occurs between the point
 				// and the light (and not past the light).
-
 				if(iDepth <= toLightVec.length()) {
 					inShadow = true;
 					break;
@@ -439,7 +438,6 @@ Raytracer::shade(	double posX, double posY, double posZ,
 				// depth test
 				// We only count it if the intersection occurs between the point
 				// and the light (and not past the light).
-
 				if(iDepth <= toLightVec.length()) {
 					inShadow = true;
 					break;
