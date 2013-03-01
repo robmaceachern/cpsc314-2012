@@ -72,10 +72,20 @@ Plane::intersect(Ray ray, double *depth,
 		*posX = (dvec[0] * t) + evec[0];
 		*posY =	(dvec[1] * t) + evec[1];
 		*posZ = (dvec[2] * t) + evec[2];
-		*normalX = nvec[0];
-		*normalY = nvec[1];
-		*normalZ = nvec[2];
 
+		if (denom > 0) {
+			
+			*normalX = -nvec[0];
+			*normalY = -nvec[1];
+			*normalZ = -nvec[2];
+
+		} else {
+
+			*normalX = nvec[0];
+			*normalY = nvec[1];
+			*normalZ = nvec[2];
+
+		}
 	}
 
 	//////////*********** END OF CODE TO CHANGE *******////////////

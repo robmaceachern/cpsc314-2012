@@ -193,6 +193,11 @@ Raytracer::traceRay(	Ray pixelRay,
 				intersectPos[0]=iPos[0]; intersectPos[1]=iPos[1]; intersectPos[2]=iPos[2];
 				intersectNormal[0]=iNormal[0]; intersectNormal[1]=iNormal[1]; intersectNormal[2]=iNormal[2];
 				intersectMaterial = p->material;
+
+				if (*currRayRecursion > 1) {
+					printf("recursive ray intersection with plane\n");
+					printf("intersectNormal %f, %f, %f\n", intersectNormal[0], intersectNormal[1], intersectNormal[2]);
+				}
 			}
 		}		
 	}
@@ -235,7 +240,47 @@ Raytracer::traceRay(	Ray pixelRay,
 
 			//////////*********** START OF CODE TO CHANGE *******////////////
 			
-			// TODO-rm
+			Vec3 iPoint(intersectPos[0],
+						intersectPos[1],
+						intersectPos[2]);
+
+			Vec3 nvec(	intersectNormal[0],
+						intersectNormal[1],
+						intersectNormal[2]);
+			nvec.normalize();
+
+			Vec3 origRay(	pixelRay.direction[0],
+							pixelRay.direction[1],
+							pixelRay.direction[2]);
+			origRay.normalize();
+
+			// http://en.wikipedia.org/wiki/Snell%27s_law#Vector_form
+			double nDotRay = nvec.dot(origRay.scale(-1.0));
+
+			if (nDotRay > 0) {
+
+				double correctionFactorX = (nvec[0] > 0) ? 0.000001 : -0.000001;
+				double correctionFactorY = (nvec[1] > 0) ? 0.000001 : -0.000001;
+				double correctionFactorZ = (nvec[2] > 0) ? 0.000001 : -0.000001;
+
+				Vec3 reflectVec = origRay.add(nvec.scale(2 * nDotRay));
+				Ray secondaryRay(	iPoint[0] + correctionFactorX, 
+									iPoint[1] + correctionFactorY,
+									iPoint[2] + correctionFactorZ,
+									reflectVec[0], reflectVec[1], reflectVec[2]);
+
+				double redReflect = *red;
+				double greenReflect = *green;
+				double blueReflect = *blue;
+				double d = 1;
+
+				this->traceRay(secondaryRay, lights, planes, spheres, camera, currRayRecursion,
+						 &redReflect, &greenReflect, &blueReflect, &d);
+
+				*red = (*red * (1 - intersectMaterial.reflect)) + (redReflect * intersectMaterial.reflect);
+				*green = (*green * (1 - intersectMaterial.reflect)) + (greenReflect * intersectMaterial.reflect);
+				*blue = (*blue * (1 - intersectMaterial.reflect)) +  (blueReflect * intersectMaterial.reflect);
+			}
 
 			//////////*********** END OF CODE TO CHANGE *******////////////
 
@@ -321,15 +366,16 @@ Raytracer::shade(	double posX, double posY, double posZ,
 		for (i = 0; i < 3; i++) {
 
 			// https://piazza.com/class#winterterm22012/cpsc314/93
-			double intensity = (light->diffuse[i] * attenuation) + (light->specular[i] * attenuation);
+			double intensityDiffuse = (light->diffuse[i] * attenuation);
+			double intensitySpecular = (light->specular[i] * attenuation);
 			//printf("intensity: %f \n", intensity);
 
 			double ambient = material.ambient[i] * light->ambient[i];
 
 			double nDotL = nvec.dot(lvec);
 
-			double diffuse = (nDotL > 0) ? material.diffuse[i] * intensity * fmaxf(0, nvec.dot(lvec)) : 0;
-			double specular = (nDotL > 0) ? material.specular[i] * intensity * pow(fmaxf(0, vvec.dot(rvec)), material.shininess) : 0;
+			double diffuse = (nDotL > 0) ? material.diffuse[i] * intensityDiffuse * fmaxf(0, nvec.dot(lvec)) : 0;
+			double specular = (nDotL > 0) ? material.specular[i] * intensitySpecular * pow(fmaxf(0, vvec.dot(rvec)), material.shininess) : 0;
 
 			lightComponents[i] = fminf(ambient + diffuse + specular, 1);
 		}
@@ -341,7 +387,13 @@ Raytracer::shade(	double posX, double posY, double posZ,
 						light->position[1] - posY,
 						light->position[2] - posZ);
 
-		Ray toLight(posX, posY, posZ,
+		double correctionFactorX = (toLightVec[0] > 0) ? 0.000001 : -0.000001;
+		double correctionFactorY = (toLightVec[1] > 0) ? 0.000001 : -0.000001;
+		double correctionFactorZ = (toLightVec[2] > 0) ? 0.000001 : -0.000001;
+
+		Ray toLight(posX + correctionFactorX,
+					posY + correctionFactorY,
+					posZ + correctionFactorZ,
 					toLightVec[0], 
 					toLightVec[1],
 					toLightVec[2]);
@@ -368,17 +420,54 @@ Raytracer::shade(	double posX, double posY, double posZ,
 			}
 		}
 
+		foreach(p, (*planes), vector<Plane>) {
+			
+			double iDepth, iPos[3], iNormal[3];
+
+			if( p->intersect(	toLight, &iDepth, 
+								&iPos[0], &iPos[1], &iPos[2],
+								&iNormal[0], &iNormal[1], &iNormal[2]))
+			{
+
+				// depth test
+				// We only count it if the intersection occurs between the point
+				// and the light (and not past the light).
+
+				if(iDepth <= toLightVec.length()) {
+					inShadow = true;
+					break;
+				}
+			}
+		}
+
 		//////////*********** END OF CODE TO CHANGE *******////////////
 
 		if(material.shadow != 0.0) {
 
 			//////////*********** START OF CODE TO CHANGE *******////////////
+			
 			if (inShadow == true) {
 
-				printf("Position of light that is shadowed: %f, %f, %f \n", light->position[0], light->position[1], light->position[2]);
+				//printf("Position of light that is shadowed: %f, %f, %f \n", light->position[0], light->position[1], light->position[2]);
+				
 				lightComponents[0] *= (1 - material.shadow);
 				lightComponents[1] *= (1 - material.shadow);
 				lightComponents[2] *= (1 - material.shadow);
+				
+				// if (light->position[1] > 6) {
+				// 	*red = 1;
+				// 	*green = 0;
+				// 	*blue = 0;
+				// } else {
+				// 	*red = 0;
+				// 	*green = 1;
+				// 	*blue = 0;
+				// }
+				
+				// doesn't work
+				// *red += material.ambient[0] * light->ambient[0];
+				// *green += material.ambient[1] * light->ambient[1];
+				// *blue += material.ambient[2] * light->ambient[2];
 
 			}
 			
@@ -390,10 +479,6 @@ Raytracer::shade(	double posX, double posY, double posZ,
 
 		//////////*********** START OF CODE TO CHANGE *******////////////
 
-		// TODO-rm
-		// add calculated color to final color
-
-		
 		*red += lightComponents[0];
 		*green += lightComponents[1];
 		*blue += lightComponents[2];
