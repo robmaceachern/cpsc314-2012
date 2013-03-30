@@ -18,6 +18,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
+
+#include <Primitives.h>
 #include <FileParser.h>
 
 //////////////////////////////////////////////////////////////////

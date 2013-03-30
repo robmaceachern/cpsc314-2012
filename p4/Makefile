@@ -1,14 +1,20 @@
-CCFLAGS = -g -pg
+CC=	g++
+CFLAGS=	-Iinclude
+PROG=   wallbuster
+SRCS=   src/FileParser.cpp src/Primitives.cpp src/main.cpp
+OBJS=	$(SRCS:.cpp=.o)
 
-default: P2
-
-P2: main.cpp
-	g++ ${CCFLAGS_MAKE_TEXTURES} main.cpp -o P2 \
+$(PROG): $(OBJS)
+	$(CC) -o $(PROG) $(OBJS) \
 		-framework OpenGL -framework GLUT
 
-FileParser.o: include/FileParser.h
-main.o: include/Primitives.h
+
+%.o: %.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
+
+Primitives.o: include/Primitives.h math.h 
+FileParser.o: include/FileParser.h include/Primitives.h vector iostream fstream sstream 
+main.o: include/Primitives.h include/FileParser.h vector string
 
 clean:
-	touch P2
-	rm -rf P2 *.o
+	rm -f *~ $(OBJS) $(PROG)
