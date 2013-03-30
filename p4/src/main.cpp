@@ -1,17 +1,17 @@
 #if defined(__APPLE_CC__)
-#include<OpenGL/gl.h>
-#include<OpenGL/glu.h>
-#include<GLUT/glut.h>
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#include <GLUT/glut.h>
 #elif defined(WIN32)
-#include<windows.h>
-#include<GL/gl.h>
-#include<GL/glu.h>
-#include<GL/glut.h>
+#include <windows.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glut.h>
 #else
-#include<GL/gl.h>
-#include<GL/glu.h>
-#include<GL/glut.h>
-#include<stdint.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glut.h>
+#include <stdint.h>
 #endif
 
 #include <iostream>
