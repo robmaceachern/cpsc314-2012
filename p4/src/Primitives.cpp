@@ -234,8 +234,15 @@ bool Ball::intersectsWith(LineSegment segment, Vec3* bounceVec)
 	if (distV.length() > this->radius) {
 		return false;
 	} else {
+
+		if (distV[0] < 0 && distV[1] < 0) {
+			printf("Weird case...\n");
+		} 
+
+		printf("Ball position (%f, %f)\n", this->center.x, this->center.y);
 		printf("Intersection with segment  (%f, %f) (%f, %f)\n", segment.a.x, segment.a.y, segment.b.x, segment.b.y);
-		*bounceVec = distV;
+		*bounceVec = distV.scale(1.0/distV.length()).scale(this->radius - distV.length());
+		printf("BounceVec (%f, %f)\n", distV[0], distV[1]);
 		return true;
 	}
 
