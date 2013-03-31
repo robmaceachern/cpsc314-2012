@@ -210,4 +210,36 @@ Sphere::intersect(Ray ray, double *depth,
 	return true;
 }
 
+bool Ball::intersectsWith(LineSegment segment, Vec3* bounceVec)
+{
+   
+	Vec3 segVec(segment.b.x - segment.a.x, segment.b.y - segment.a.y, 0);
+	Vec3 ptV(this->center.x - segment.a.x, this->center.y - segment.a.y, 0);
+
+	double projVLen = ptV.dot(segVec.scale(1.0/segVec.length()));
+
+	Point2D closest;
+	if (projVLen < 0) {
+		closest = segment.a;
+	} else if (projVLen > segVec.length()) {
+		closest = segment.b;
+	} else {
+		Vec3 projV = segVec.scale(1.0/segVec.length()).scale(projVLen);
+		closest = Point2D(segment.a.x + projV[0], segment.a.y + projV[1]);
+		// printf("Segment = (%f, %f) (%f, %f)\n", segment.a.x, segment.a.y, segment.b.x, segment.b.y);
+		// printf("(%f, %f)\n", closest.x, closest.y);
+	}
+
+	Vec3 distV = Vec3(this->center.x - closest.x, this->center.y - closest.y, 0);
+	if (distV.length() > this->radius) {
+		return false;
+	} else {
+		printf("Intersection with segment  (%f, %f) (%f, %f)\n", segment.a.x, segment.a.y, segment.b.x, segment.b.y);
+		*bounceVec = distV;
+		return true;
+	}
+
+	return false;
+}
+
 ///////////////////////////////////////////////////////////////////////////

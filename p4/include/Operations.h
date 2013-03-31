@@ -30,6 +30,12 @@ public:
 		coord[1] = y;
 		coord[2] = z;
 	};
+
+	Vec3() {
+		coord[0] = 0;
+		coord[1] = 0;
+		coord[2] = 0;
+	}
 	// destructor
 	~Vec3() {};
 

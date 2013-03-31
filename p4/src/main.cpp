@@ -22,6 +22,9 @@
 #include <Primitives.h>
 #include <FileParser.h>
 
+using namespace std;
+
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 /// Global State Variables ///////////////////////////////////////
@@ -38,9 +41,22 @@ bool quit = false;
 // display width and height
 int dispWidth=1440, dispHeight=1024;
 
+int cameraMode = 1; // 1 is overhead, 2 is paddleview
+
 void drawAxis();
 void drawFloor();
 
+vector<Block> blockVector;
+
+Ball ball = Ball(0.3, Point2D(1,1));
+
+float paddleX = 5;
+float paddleZ = -0.5;
+
+
+void drawCube() {
+    glutSolidCube(1);
+}
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -70,29 +86,133 @@ void resize_callback( int width, int height ){
 
 }
 
+void printSegments(LineSegment* segments)
+{
+    printf("Segment[0] = (%f, %f) (%f, %f)\n", segments[0].a.x, segments[0].a.y, segments[0].b.x, segments[0].b.y);
+    printf("Segment[1] = (%f, %f) (%f, %f)\n", segments[1].a.x, segments[1].a.y, segments[1].b.x, segments[1].b.y);
+    printf("Segment[2] = (%f, %f) (%f, %f)\n", segments[2].a.x, segments[2].a.y, segments[2].b.x, segments[2].b.y);
+    printf("Segment[3] = (%f, %f) (%f, %f)\n", segments[3].a.x, segments[3].a.y, segments[3].b.x, segments[3].b.y);
+}
+
+void drawBlock(Block b)
+{
+    float blockHeight = 0.4;
+    glPushMatrix();
+
+    Point2D pos = b.position;
+    RectSize size = b.size;
+
+    glTranslatef(pos.x + (size.w / 2.0), 0.2, -(pos.y + size.h/2.0));
+    glScalef(size.w, blockHeight, size.h);
+    drawCube();
+
+    glPopMatrix();
+}
+
+void drawBall(Ball b)
+{
+    glPushMatrix();
+
+    Point2D pos = b.center;
+    float radius = b.radius;
+
+    glTranslatef(pos.x, 0.35, -(pos.y));
+    glutSolidSphere(radius, 15, 15);
+
+    glPopMatrix();
+}
+
+void drawPaddle()
+{
+    glPushMatrix();
+
+    glTranslatef(paddleX, 0.3, -0.2);
+    glScalef(2, 0.6, 0.5);
+    drawCube();
+
+    glPopMatrix();
+}
+
+void positionCamera()
+{
+    if (cameraMode == 1)
+    {
+        glRotatef(60, 1, 0, 0);
+        glTranslatef( -5.0, -5.0, 0 );
+        drawAxis();
+    } else if (cameraMode == 2) {
+        glTranslatef(-paddleX, -1.5, -1.5);
+        drawAxis();
+    }
+}
+
+void updateBallPositionAndVelocity()
+{
+    // ball will be drawn immediately following this function
+
+
+    // update position
+    ball.center.x += ball.deltaX;
+    ball.center.y += ball.deltaY;
+
+    // check for collisions with block line segments
+    int i;
+    for (i = 0; i < blockVector.size(); i++) {
+        Block b = blockVector[i];
+        LineSegment segments[4] = b.segments;
+        
+        int j;
+        for (j = 0; j < 4; j++) {
+            Vec3 bounceVec;
+            bool intersect = ball.intersectsWith(segments[j], &bounceVec);
+            if (intersect) {
+                printf("Intersection detected!\n");
+
+                printf("bounce: (%f, %f)\n", bounceVec[0], bounceVec[1]);
+
+                if (bounceVec[0] < 0) {
+                    ball.deltaX = -ball.deltaX;
+                }
+
+                if (bounceVec[1] < 0) {
+                    ball.deltaY = -ball.deltaY;
+                }
+                break;
+            }
+        }
+    }
+
+    float xRightWall = 10;
+    float xLeftWall = 0;
+    float zTopWall = 10;
+    float zBottomWall = 0;
+
+    if (ball.center.x + ball.radius > xRightWall || ball.center.x - ball.radius < xLeftWall) {
+        ball.deltaX = -ball.deltaX;
+    }
+
+    if (ball.center.y + ball.radius > zTopWall || ball.center.y - ball.radius < zBottomWall) {
+        ball.deltaY = -ball.deltaY;
+    }
+}
+
 // keyboard callback
 void keyboardCallback( unsigned char key, int x, int y ){
     switch( key ){
         case 27:
             quit = true;
             break;
+        case '1':
+            cameraMode = 1;
+            break;
+        case '2':
+            cameraMode = 2;
+            break;
         default:
             break;
     }
 }
 
-float xPos = 5;
-float zPos = -5;
-
-float deltaX = 0.11;
-float deltaZ = 0.09;
-
-float paddleX = 5;
-float paddleZ = -0.5;
-
-void drawCube() {
-    glutSolidCube(1);
-}
 
 // display callback
 void displayCallback( void ){
@@ -114,47 +234,18 @@ void displayCallback( void ){
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    glRotatef(60, 1, 0, 0);
-    glTranslatef( -5.0, -5.0, 0 );
-    drawAxis();
+    positionCamera();    
 
-    glPushMatrix();
+    updateBallPositionAndVelocity();
+    drawBall(ball);
 
-    xPos = xPos + deltaX;
-    zPos = zPos + deltaZ;
+    drawPaddle();
 
-    float xRightWall = 9;
-    float xLeftWall = 1;
-    float zTopWall = -9;
-    float zBottomWall = 0;
-
-    if (xPos > xRightWall || xPos < xLeftWall) {
-        deltaX = -deltaX;
-    }
-
-    if (zPos < zTopWall || zPos > zBottomWall) {
-        deltaZ = -deltaZ;
-    }
-
-    glTranslatef(xPos, 1, zPos);
-    glutSolidSphere(0.3, 15, 15);
-    
-    glPopMatrix();
-
-    glPushMatrix();
-
-    glTranslatef(paddleX, 1, -0.2);
-    glScalef(2, 1, 0.5);
-    drawCube();
-
-    glPopMatrix();
-
-    glPushMatrix();
-
-    glTranslatef(5, 1, -5);
-    drawCube();
-
-    glPopMatrix();
+    int i;
+    for (i = 0; i < blockVector.size(); i++)
+    {
+        drawBlock(blockVector[i]);   
+    }    
 
     drawFloor();
 
@@ -387,10 +478,10 @@ void SpecialInput(int key, int x, int y)
         //do something here
         break;
         case GLUT_KEY_LEFT:
-        paddleX = paddleX - 0.3;
+        paddleX = paddleX - 0.2;
         break;
         case GLUT_KEY_RIGHT:
-        paddleX = paddleX + 0.3;
+        paddleX = paddleX + 0.2;
         break;
     }
 }
@@ -442,6 +533,18 @@ int main(int argc, char **argv)
     glEnable( GL_LIGHT1 );
     glEnable( GL_COLOR_MATERIAL );
     
+    blockVector.push_back(Block(Point2D(2, 8), RectSize(1, 0.8)));
+    blockVector.push_back(Block(Point2D(4, 8), RectSize(2, 0.8)));
+    blockVector.push_back(Block(Point2D(6, 8), RectSize(2, 0.8)));
+    blockVector.push_back(Block(Point2D(0, 2), RectSize(2, 0.8)));
+    blockVector.push_back(Block(Point2D(2, 6), RectSize(1, 0.8)));
+    blockVector.push_back(Block(Point2D(8, 5), RectSize(2, 0.8)));
+    blockVector.push_back(Block(Point2D(6, 7), RectSize(1, 0.8)));
+    blockVector.push_back(Block(Point2D(5, 6), RectSize(2, 0.8)));
+    blockVector.push_back(Block(Point2D(3, 5), RectSize(1, 0.8)));
+
+    ball.deltaX = 0.09;
+    ball.deltaY = 0.16;
     idle( 0 );
 
     // pass control over to GLUT

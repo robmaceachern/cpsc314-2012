@@ -15,6 +15,7 @@
 #define __PRIMITIVES__
 
 #include <Operations.h>
+#include <stdio.h>
 
 ///////////////////////////////////////////////////////////////////////////
 
@@ -92,6 +93,101 @@ public:
 };
 
 ///////////////////////////////////////////////////////////////////////////
+
+struct Point2D
+{
+	float x, y;
+
+	Point2D(float x1, float y1) {
+        x = x1; y = y1;
+    }
+    
+    Point2D() {
+        x = 0;
+        y = 0;
+    }
+};
+
+struct LineSegment
+{
+	Point2D a, b;
+
+	LineSegment(Point2D a1, Point2D b1) {
+		a = a1; b = b1;
+	}
+
+	LineSegment () {
+		a = Point2D(0,0);
+		b = Point2D(0,0);
+	}
+};
+
+struct RectSize
+{
+	float w, h;
+
+	RectSize(float w1, float h1) {
+        w = w1; h = h1;
+    }
+
+    RectSize() {
+    	w = 1;
+    	h = 1;
+    }
+};
+
+class GameObject {
+
+public:
+	GameObject() {};
+	~GameObject() {};
+
+	int objectId;
+
+};
+
+class Block : public GameObject {
+
+public:
+	Block(Point2D position, RectSize size)
+	{
+		this->position = position;
+		this->size = RectSize(size.w, size.h);
+		this->segments[0] = LineSegment(position, Point2D(position.x, position.y + size.h));
+		this->segments[1] = LineSegment(Point2D(position.x, position.y + size.h), Point2D(position.x + size.w, position.y + size.h));
+		this->segments[2] = LineSegment(Point2D(position.x + size.w, position.y + size.h), Point2D(position.x + size.w, position.y));
+		this->segments[3] = LineSegment(Point2D(position.x + size.w, position.y), position);
+		this->isActive = true;
+	}
+
+	~Block() {};
+
+	Point2D position;
+	RectSize size;
+	LineSegment segments[4];
+	bool isActive;
+};
+
+class Ball : public GameObject {
+
+public:
+	Ball(float radius, Point2D center)
+	{
+		this->radius = radius;
+		this->center = Point2D(center.x, center.y);
+		this->deltaX = 0.01;
+		this->deltaY = 0.01;
+	}
+
+	~Ball() {};
+
+	bool intersectsWith(LineSegment segment, Vec3* bounceVec);
+
+	Point2D center;
+	float radius;
+	float deltaX;
+	float deltaY;
+};
 
 class Primitive {
 
