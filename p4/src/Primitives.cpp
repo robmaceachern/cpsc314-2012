@@ -236,17 +236,25 @@ bool Ball::intersectsWith(LineSegment segment, Vec3* bounceVec)
 	} else {
 
 		if (distV[0] < 0 && distV[1] < 0) {
-			printf("Weird case...\n");
+			//printf("Weird case...\n");
 		} 
 
-		printf("Ball position (%f, %f)\n", this->center.x, this->center.y);
-		printf("Intersection with segment  (%f, %f) (%f, %f)\n", segment.a.x, segment.a.y, segment.b.x, segment.b.y);
+		//printf("Ball position (%f, %f)\n", this->center.x, this->center.y);
+		//printf("Intersection with segment  (%f, %f) (%f, %f)\n", segment.a.x, segment.a.y, segment.b.x, segment.b.y);
 		*bounceVec = distV.scale(1.0/distV.length()).scale(this->radius - distV.length());
-		printf("BounceVec (%f, %f)\n", distV[0], distV[1]);
+		//printf("BounceVec (%f, %f)\n", distV[0], distV[1]);
 		return true;
 	}
 
 	return false;
+}
+
+void Block::updateSegments()
+{
+	this->segments[0] = LineSegment(position, Point2D(position.x, position.y + size.h));
+	this->segments[1] = LineSegment(Point2D(position.x, position.y + size.h), Point2D(position.x + size.w, position.y + size.h));
+	this->segments[2] = LineSegment(Point2D(position.x + size.w, position.y + size.h), Point2D(position.x + size.w, position.y));
+	this->segments[3] = LineSegment(Point2D(position.x + size.w, position.y), position);
 }
 
 ///////////////////////////////////////////////////////////////////////////

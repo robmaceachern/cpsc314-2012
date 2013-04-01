@@ -153,15 +153,14 @@ public:
 	{
 		this->position = position;
 		this->size = RectSize(size.w, size.h);
-		this->segments[0] = LineSegment(position, Point2D(position.x, position.y + size.h));
-		this->segments[1] = LineSegment(Point2D(position.x, position.y + size.h), Point2D(position.x + size.w, position.y + size.h));
-		this->segments[2] = LineSegment(Point2D(position.x + size.w, position.y + size.h), Point2D(position.x + size.w, position.y));
-		this->segments[3] = LineSegment(Point2D(position.x + size.w, position.y), position);
+		this->updateSegments();
 		this->isActive = true;
 		this->hpRemaining = 3;
 	}
 
 	~Block() {};
+
+	void updateSegments();
 
 	Point2D position;
 	RectSize size;
