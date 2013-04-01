@@ -158,6 +158,7 @@ public:
 		this->segments[2] = LineSegment(Point2D(position.x + size.w, position.y + size.h), Point2D(position.x + size.w, position.y));
 		this->segments[3] = LineSegment(Point2D(position.x + size.w, position.y), position);
 		this->isActive = true;
+		this->hpRemaining = 3;
 	}
 
 	~Block() {};
@@ -166,6 +167,7 @@ public:
 	RectSize size;
 	LineSegment segments[4];
 	bool isActive;
+	int hpRemaining;
 };
 
 class Ball : public GameObject {

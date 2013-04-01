@@ -161,49 +161,64 @@ void updateBallPositionAndVelocity()
         Block b = blockVector[i];
         LineSegment segments[4] = b.segments;
         
+        bool intersectionOccured = false;
         int j;
         for (j = 0; j < 4; j++) {
             Vec3 bounceVec;
             bool intersect = ball.intersectsWith(segments[j], &bounceVec);
             if (intersect) {
 
-                float epsilon = 0.01;
-                if (bounceVec[0] < 1) {
-                    epsilon = -epsilon;
-                }
-                ball.center.x += bounceVec[0] + epsilon;
-
-                epsilon = 0.01;
-                if (bounceVec[1] < 1) {
-                    epsilon = -epsilon;
-                }
-                ball.center.y += bounceVec[1] + epsilon;
-
-                //printf("Intersection detected! index: %d\n", j);
-
-                //printf("bounce: (%f, %f)\n", bounceVec[0], bounceVec[1]);
-
-                if (bounceVec[0] < 0 && bounceVec[1] < 0) {
-
+                intersectionOccured = true;
+                LineSegment curr = segments[j];
+                if (curr.a.x == curr.b.x) {
+                    // vertical segment
                     ball.deltaX = -ball.deltaX;
-                    ball.deltaY = -ball.deltaY;
-
-                    //strange 'corner bounce' case
-                    // if (segments[j].a.x == segments[j].b.x) {
-                    //     // vertical line, only update deltaY
-                    //     ball.deltaY = -ball.deltaY;
-                    // } else if (segments[j].a.y == segments[j].b.y) {
-                    //     // horizontal line, only update deltaX
-                    //     ball.deltaX = -ball.deltaX;
-                    // } else {
-                    //     printf("even weirder case...\n");
-                    // }
-                } else if (bounceVec[0] < 0) {
-                    ball.deltaX = -ball.deltaX;
-                } else if (bounceVec[1] < 0) {
+                } else if (curr.a.y == curr.b.y) {
+                    // horizontal segment
                     ball.deltaY = -ball.deltaY;
                 }
-                break;
+
+                ball.center.x += bounceVec[0];
+                ball.center.y += bounceVec[1];
+
+                // float epsilon = 0.01;
+                // if (bounceVec[0] < 1) {
+                //     epsilon = -epsilon;
+                // }
+                // ball.center.x += bounceVec[0] + epsilon;
+
+                // epsilon = 0.01;
+                // if (bounceVec[1] < 1) {
+                //     epsilon = -epsilon;
+                // }
+                // ball.center.y += bounceVec[1] + epsilon;
+
+                // //printf("Intersection detected! index: %d\n", j);
+
+                // //printf("bounce: (%f, %f)\n", bounceVec[0], bounceVec[1]);
+                // float xBounce = 
+
+                // if (bounceVec[0] < 0 && bounceVec[1] < 0) {
+
+                //     ball.deltaX = -ball.deltaX;
+                //     ball.deltaY = -ball.deltaY;
+
+                //     //strange 'corner bounce' case
+                //     // if (segments[j].a.x == segments[j].b.x) {
+                //     //     // vertical line, only update deltaY
+                //     //     ball.deltaY = -ball.deltaY;
+                //     // } else if (segments[j].a.y == segments[j].b.y) {
+                //     //     // horizontal line, only update deltaX
+                //     //     ball.deltaX = -ball.deltaX;
+                //     // } else {
+                //     //     printf("even weirder case...\n");
+                //     // }
+                // } else if (bounceVec[0] < 0) {
+                //     ball.deltaX = -ball.deltaX;
+                // } else if (bounceVec[1] < 0) {
+                //     ball.deltaY = -ball.deltaY;
+                // }
+                //break;
             }
         }
     }
@@ -559,15 +574,15 @@ int main(int argc, char **argv)
     glEnable( GL_LIGHT1 );
     glEnable( GL_COLOR_MATERIAL );
     
-    blockVector.push_back(Block(Point2D(2, 4), RectSize(7, 0.8)));
-    // blockVector.push_back(Block(Point2D(4, 8), RectSize(2, 0.8)));
-    // blockVector.push_back(Block(Point2D(6, 8), RectSize(2, 0.8)));
-    // blockVector.push_back(Block(Point2D(0, 2), RectSize(2, 0.8)));
-    // blockVector.push_back(Block(Point2D(2, 6), RectSize(1, 0.8)));
-    // blockVector.push_back(Block(Point2D(8, 5), RectSize(2, 0.8)));
-    // blockVector.push_back(Block(Point2D(6, 7), RectSize(1, 0.8)));
-    // blockVector.push_back(Block(Point2D(5, 6), RectSize(2, 0.8)));
-    // blockVector.push_back(Block(Point2D(3, 5), RectSize(1, 0.8)));
+    blockVector.push_back(Block(Point2D(2, 4), RectSize(4, 0.8)));
+    blockVector.push_back(Block(Point2D(4, 8), RectSize(2, 0.8)));
+    blockVector.push_back(Block(Point2D(6, 8), RectSize(2, 0.8)));
+    blockVector.push_back(Block(Point2D(0, 2), RectSize(2, 0.8)));
+    blockVector.push_back(Block(Point2D(2, 6), RectSize(1, 0.8)));
+    blockVector.push_back(Block(Point2D(8, 5), RectSize(2, 0.8)));
+    blockVector.push_back(Block(Point2D(6, 7), RectSize(1, 0.8)));
+    blockVector.push_back(Block(Point2D(5, 6), RectSize(2, 0.8)));
+    blockVector.push_back(Block(Point2D(3, 5), RectSize(1, 0.8)));
 
     ball.deltaX = 0.09;
     ball.deltaY = 0.16;
