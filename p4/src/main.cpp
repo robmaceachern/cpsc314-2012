@@ -48,13 +48,14 @@ void drawFloor();
 
 vector<Block> blockVector;
 
-Ball ball = Ball(0.3, Point2D(1,1));
+Ball ball = Ball(0.2, Point2D(1,1));
 
 Block* paddle;
 
 int currentScore = 0;
 int livesRemaining = 5;
 int currentLevel = 0;
+int totalPaddleHits = 0;
 
 // 0 - ball on paddle
 // 1 - in game
@@ -241,6 +242,16 @@ void updateBallPositionAndVelocity()
 
     // check for collision with paddle
     bool paddleHit = checkAndHandleIntersection(&ball, paddle);
+
+    if (paddleHit) {
+        totalPaddleHits++;
+        if (totalPaddleHits > 15) {
+            ball.deltaY *= 1.2;
+            ball.deltaX *= 1.2;
+            totalPaddleHits = 0;
+            printf("ball speed increased! (%f, %f)\n", ball.deltaX, ball.deltaY);
+        }
+    }
     // TODO add some paddle spin?
 
     float xRightWall = 10;
@@ -617,18 +628,102 @@ int main(int argc, char **argv)
     glEnable( GL_LIGHT1 );
     glEnable( GL_COLOR_MATERIAL );
     
-    blockVector.push_back(Block(Point2D(2, 4), RectSize(4, 0.8)));
-    blockVector.push_back(Block(Point2D(4, 8), RectSize(2, 0.8)));
-    blockVector.push_back(Block(Point2D(6, 8), RectSize(2, 0.8)));
-    blockVector.push_back(Block(Point2D(0, 2), RectSize(2, 0.8)));
-    blockVector.push_back(Block(Point2D(2, 6), RectSize(1, 0.8)));
-    blockVector.push_back(Block(Point2D(8, 5), RectSize(2, 0.8)));
-    blockVector.push_back(Block(Point2D(6, 7), RectSize(1, 0.8)));
-    blockVector.push_back(Block(Point2D(5, 6), RectSize(2, 0.8)));
-    blockVector.push_back(Block(Point2D(3, 5), RectSize(1, 0.8)));
+    // (y + h) <= 10
+
+    blockVector.push_back(Block(Point2D(0.5, 9.0), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(0.5, 8.3), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(0.5, 7.6), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(0.5, 6.9), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(0.5, 6.2), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(0.5, 5.5), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(0.5, 4.8), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(0.5, 4.1), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(0.5, 3.4), RectSize(0.45, 0.45)));
+
+    blockVector.push_back(Block(Point2D(1.0, 9.0), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(1.0, 8.3), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(1.0, 7.6), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(1.0, 6.9), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(1.0, 6.2), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(1.0, 5.5), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(1.0, 4.8), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(1.0, 4.1), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(1.0, 3.4), RectSize(0.45, 0.45)));
+
+    blockVector.push_back(Block(Point2D(1.95, 8.0), RectSize(0.9, 0.9)));
+    blockVector.push_back(Block(Point2D(1.95, 6.6), RectSize(0.9, 0.9)));
+    blockVector.push_back(Block(Point2D(1.95, 5.2), RectSize(0.9, 0.9)));
+
+    blockVector.push_back(Block(Point2D(3.5, 9.0), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(3.5, 8.3), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(3.5, 7.6), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(3.5, 6.9), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(3.5, 6.2), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(3.5, 5.5), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(3.5, 4.8), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(3.5, 4.1), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(3.5, 3.4), RectSize(0.45, 0.45)));
+
+    blockVector.push_back(Block(Point2D(4.55, 8.0), RectSize(0.9, 0.9)));
+    blockVector.push_back(Block(Point2D(4.55, 6.6), RectSize(0.9, 0.9)));
+    blockVector.push_back(Block(Point2D(4.55, 5.2), RectSize(0.9, 0.9)));
+    blockVector.push_back(Block(Point2D(4.55, 3.8), RectSize(0.9, 0.9)));
+
+    blockVector.push_back(Block(Point2D(6.05, 9.0), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(6.05, 8.3), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(6.05, 7.6), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(6.05, 6.9), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(6.05, 6.2), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(6.05, 5.5), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(6.05, 4.8), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(6.05, 4.1), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(6.05, 3.4), RectSize(0.45, 0.45)));
+
+    blockVector.push_back(Block(Point2D(6.95, 8.0), RectSize(0.9, 0.9)));
+    blockVector.push_back(Block(Point2D(6.95, 6.6), RectSize(0.9, 0.9)));
+    blockVector.push_back(Block(Point2D(6.95, 5.2), RectSize(0.9, 0.9)));
+
+    blockVector.push_back(Block(Point2D(8.5, 9.0), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(8.5, 8.3), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(8.5, 7.6), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(8.5, 6.9), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(8.5, 6.2), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(8.5, 5.5), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(8.5, 4.8), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(8.5, 4.1), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(8.5, 3.4), RectSize(0.45, 0.45)));
+
+    blockVector.push_back(Block(Point2D(9.0, 9.0), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(9.0, 8.3), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(9.0, 7.6), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(9.0, 6.9), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(9.0, 6.2), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(9.0, 5.5), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(9.0, 4.8), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(9.0, 4.1), RectSize(0.45, 0.45)));
+    blockVector.push_back(Block(Point2D(9.0, 3.4), RectSize(0.45, 0.45)));
+    
+
+    // blockVector.push_back(Block(Point2D(4, 8), RectSize(2, 0.8)));
+    // blockVector.push_back(Block(Point2D(6, 8), RectSize(2, 0.8)));
+    // blockVector.push_back(Block(Point2D(0, 2), RectSize(2, 0.8)));
+    // blockVector.push_back(Block(Point2D(2, 6), RectSize(1, 0.8)));
+    // blockVector.push_back(Block(Point2D(8, 5), RectSize(2, 0.8)));
+    // blockVector.push_back(Block(Point2D(6, 7), RectSize(1, 0.8)));
+    // blockVector.push_back(Block(Point2D(5, 6), RectSize(2, 0.8)));
+    // blockVector.push_back(Block(Point2D(3, 5), RectSize(1, 0.8)));
+    // blockVector.push_back(Block(Point2D(2, 4), RectSize(4, 0.8)));
+    // blockVector.push_back(Block(Point2D(4, 8), RectSize(2, 0.8)));
+    // blockVector.push_back(Block(Point2D(6, 8), RectSize(2, 0.8)));
+    // blockVector.push_back(Block(Point2D(0, 2), RectSize(2, 0.8)));
+    // blockVector.push_back(Block(Point2D(2, 6), RectSize(1, 0.8)));
+    // blockVector.push_back(Block(Point2D(8, 5), RectSize(2, 0.8)));
+    // blockVector.push_back(Block(Point2D(6, 7), RectSize(1, 0.8)));
+    // blockVector.push_back(Block(Point2D(5, 6), RectSize(2, 0.8)));
+    // blockVector.push_back(Block(Point2D(3, 5), RectSize(1, 0.8)));
 
     // the paddle block
-    Block paddleBlock = Block(Point2D(3, 0), RectSize(4, 0.8));
+    Block paddleBlock = Block(Point2D(3, 0), RectSize(3, 0.4));
     paddleBlock.hpRemaining = std::numeric_limits<int>::max();
     paddle = &paddleBlock;
 
