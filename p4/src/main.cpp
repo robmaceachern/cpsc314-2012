@@ -18,10 +18,14 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>
+#include<stdint.h>
+#include"CImg.h"
 
 #include <Primitives.h>
 #include <FileParser.h>
+#include <sys/time.h>
 
+using namespace cimg_library;
 using namespace std;
 
 
@@ -62,6 +66,77 @@ int totalPaddleHits = 0;
 // 2 - level beat
 // 3 - game over
 int gameState = 0;
+
+GLfloat no_mat[] = { 0.0, 0.0, 0.0, 1.0 };
+GLfloat mat_ambient[] = { 0.7, 0.7, 0.7, 1.0 };
+GLfloat mat_ambient_color[] = { 0.8, 0.8, 0.2, 1.0 };
+GLfloat mat_diffuse[] = { 0.1, 0.5, 0.8, 1.0 };
+GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+GLfloat no_shininess[] = { 0.0 };
+GLfloat low_shininess[] = { 5.0 };
+GLfloat high_shininess[] = { 100.0 };
+GLfloat mat_emission[] = {0.3, 0.2, 0.2, 0.0};
+
+GLfloat ambient[] = {0.19225, 0.19225, 0.19225};
+GLfloat diffuse[] = {0.50754, 0.50754, 0.50754};
+GLfloat specular[] = {0.508273, 0.508273, 0.508273};
+GLfloat shininess[] = {0.4 * 128};
+
+/*  Create checkerboard texture  */
+#define checkImageWidth 64
+#define checkImageHeight 64
+static GLubyte checkImage[checkImageHeight][checkImageWidth][4];
+static GLuint texName;
+uint8_t *data;
+
+time_t startOfSample = time(NULL);
+timeval start;
+int numFrames = 1;
+
+void makeCheckImage(void)
+{
+    // XCode users, uncomment the following line and replace *path_to_convert* with 
+    // the output of the command "which convert" run from the command line.
+    cimg::imagemagick_path( "/usr/local/bin/convert" );
+
+    CImg<uint8_t> tex("metal-tex2.bmp");
+    //tex.resize( 1024, 1024 );
+
+    // resize to power-of-two if image is not already correctly sized
+    // tex.resize( 1024, 1024 );
+
+    // EDIT: added uint8_t* to declaration of data variable to fix compile error
+    data = new uint8_t[ tex.width()*tex.height()*tex.spectrum() ];
+    int pos = 0;
+    for( int i=0; i<tex.height(); i++ ){
+        for( int j=0; j<tex.width(); j++ ){
+            for( int k=0; k<tex.spectrum(); k++ ){
+                data[pos++] = tex(j,i,0,k);
+            }
+        }
+    }
+}
+
+
+
+// AUX_RGBImageRec* LoadBMP(char* Filename)            // Loads A Bitmap Image
+// {
+//     //FILE *File=NULL;                    // File Handle
+ 
+//     if (!Filename)                      // Make Sure A Filename Was Given
+//     {
+//         return NULL;                    // If Not Return NULL
+//     }
+ 
+//     FILE File=fopen(Filename,"r");               // Check To See If The File Exists
+ 
+//     if (File)                       // Does The File Exist?
+//     {
+//         fclose(File);                   // Close The Handle
+//         return auxDIBImageLoad(Filename);       // Load The Bitmap And Return A Pointer
+//     }
+//     return NULL;                        // If Load Failed Return NULL
+// }
 
 void drawCube() {
     glutSolidCube(1);
@@ -141,7 +216,18 @@ void drawBlock(Block b)
 
     glTranslatef(pos.x + (size.w / 2.0), 0.2, -(pos.y + size.h/2.0));
     glScalef(size.w, blockHeight, size.h);
+
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_TEXTURE_2D);
+    //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+    glEnable(GL_TEXTURE_GEN_S);
+    glEnable(GL_TEXTURE_GEN_T);
+    glBindTexture(GL_TEXTURE_2D, texName);
     drawCube();
+    glDisable(GL_TEXTURE_GEN_S);
+    glDisable(GL_TEXTURE_GEN_T);
+    glDisable(GL_TEXTURE_2D);
 
     glPopMatrix();
 }
@@ -150,11 +236,21 @@ void drawBall(Ball b)
 {
     glPushMatrix();
 
+    glColor3f(0.5, 0.4, 1);
+    //glColor3f(1, 1, 1);
+
+
     Point2D pos = b.center;
     float radius = b.radius;
 
     glTranslatef(pos.x, 0.35, -(pos.y));
-    glutSolidSphere(radius, 15, 15);
+
+    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, shininess);
+    glMaterialfv(GL_FRONT, GL_EMISSION, no_mat);
+    glutSolidSphere(radius, 35, 35);
 
     glPopMatrix();
 }
@@ -344,6 +440,19 @@ void displayCallback( void ){
     // swap the front and back buffers to display the scene
     //glutSetWindow( current_window );
     glutSwapBuffers();
+    if (numFrames >= 15) {
+
+        //http://stackoverflow.com/questions/2150291/how-do-i-measure-a-time-interval-in-c
+        timeval now;
+        gettimeofday(&now, NULL);
+        double elapsedTime = elapsedTime = (now.tv_sec - start.tv_sec) * 1000.0;
+        elapsedTime += (now.tv_usec - start.tv_usec) / 1000.0;
+        printf ("FPS: %f.\n", numFrames/ (elapsedTime/1000));
+        start = now;
+        numFrames = 0;
+    }
+    numFrames++;
+
 }
 
 
@@ -581,6 +690,32 @@ void SpecialInput(int key, int x, int y)
     }
 }
 
+void doMouseClick(int button, int state, int x, int y) {
+    printf("doMouseClick x: %d, y: %d\n", x, y);
+
+    GLint viewport[4];
+
+    int BUFSIZE = 512;
+
+    glSelectBuffer(BUFSIZE,selectBuf);
+    glRenderMode(GL_SELECT);
+
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glGetIntegerv(GL_VIEWPORT,viewport);
+    gluPickMatrix(cursorX,viewport[3]-cursorY,
+            5,5,viewport);
+    gluPerspective(45,ratio,0.1,1000);
+    glMatrixMode(GL_MODELVIEW);
+    glInitNames();
+
+    glInitNames(void);
+    glPushName(1);
+    drawCube();
+    glPopName();
+}
+
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 /// Program Entry Point //////////////////////////////////////////
@@ -599,32 +734,49 @@ int main(int argc, char **argv)
     glutDisplayFunc( displayCallback );
     glutKeyboardFunc( keyboardCallback );
     glutSpecialFunc(SpecialInput);
+    glutMouseFunc(doMouseClick);
     
     glViewport( 0, 0, dispWidth, dispHeight );
     glEnable( GL_DEPTH_TEST );
     glEnable( GL_NORMALIZE );
-    
+
+    // texture
+    makeCheckImage();
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &texName);
+    glBindTexture(GL_TEXTURE_2D, texName);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                   GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                   GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth,
+                checkImageHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                data);
+
     // Turn on blending (for floor).
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     
     // lighting stuff
-    GLfloat ambient[] = {0.0, 0.0, 0.0, 1.0};
+    GLfloat ambient[] = {0.3, 0.3, 0.3, 1.0};
     GLfloat diffuse[] = {0.9, 0.9, 0.9, 1.0};
-    GLfloat specular[] = {0.4, 0.4, 0.4, 1.0};
-    GLfloat position0[] = {1.0, 1.0, 1.0, 0.0};
+    GLfloat specular[] = {0.8, 0.8, 0.8, 1.0};
+    GLfloat position0[] = {5.0, 1.0, 1.0, 0.0};
     glLightfv( GL_LIGHT0, GL_POSITION, position0 );
     glLightfv( GL_LIGHT0, GL_AMBIENT, ambient );
     glLightfv( GL_LIGHT0, GL_DIFFUSE, diffuse );
     glLightfv( GL_LIGHT0, GL_SPECULAR, specular );
-    GLfloat position1[] = {-1.0, -1.0, -1.0, 0.0};
+    
+    GLfloat position1[] = {2.0, 5.0, 0, 0.0};
     glLightfv( GL_LIGHT1, GL_POSITION, position1 );
     glLightfv( GL_LIGHT1, GL_AMBIENT, ambient );
     glLightfv( GL_LIGHT1, GL_DIFFUSE, diffuse );
     glLightfv( GL_LIGHT1, GL_SPECULAR, specular );
     
     glEnable( GL_LIGHTING );
-    glEnable( GL_LIGHT0 );
+    //glEnable( GL_LIGHT0 );
     glEnable( GL_LIGHT1 );
     glEnable( GL_COLOR_MATERIAL );
     
@@ -729,6 +881,7 @@ int main(int argc, char **argv)
 
     idle( 0 );
 
+    gettimeofday(&start, NULL);
     // pass control over to GLUT
     glutMainLoop();
     

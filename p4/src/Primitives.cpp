@@ -210,6 +210,8 @@ Sphere::intersect(Ray ray, double *depth,
 	return true;
 }
 
+
+// http://doswa.com/2009/07/13/circle-segment-intersectioncollision.html
 bool Ball::intersectsWith(LineSegment segment, Vec3* bounceVec)
 {
    
