@@ -246,10 +246,10 @@ void drawBlock(Block b, bool isPaddle)
 
 void drawBall(Ball b)
 {
+    glDisable(GL_TEXTURE_2D);
     glPushMatrix();
 
-    glColor3f(0.5, 0.4, 1);
-    //glColor3f(1,1,1);
+    glColor3f(0.6, 0.6, 0.6);
 
     Point2D pos = b.center;
     float radius = b.radius;
@@ -261,6 +261,7 @@ void drawBall(Ball b)
     glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
     glMaterialfv(GL_FRONT, GL_SHININESS, shininess);
     glMaterialfv(GL_FRONT, GL_EMISSION, ambient);
+
     glutSolidSphere(radius, 35, 35);
 
     glPopMatrix();
@@ -394,25 +395,6 @@ void idle( int value ){
     // required number of milliseconds
     glutPostRedisplay();
     glutTimerFunc( dt, idle, 0 );
-}
-
-// Draw a set of coloured cones representing the current local coord system.
-// X -> red, Y -> green, Z -> blue.
-void drawAxis() {
-    float axisHeight = 0.75; // TODO
-    float axisBase = 0.075;
-    glColor3f(0, 0, 1);
-    glutSolidCone(axisBase, axisHeight, 8, 2);
-    glPushMatrix();
-    glRotatef(90, 0, 1, 0);
-    glColor3f(1, 0, 0);
-    glutSolidCone(axisBase, axisHeight, 8, 2);
-    glPopMatrix();
-    glPushMatrix();
-    glRotatef(-90, 1, 0, 0);
-    glColor3f(0, 1, 0);
-    glutSolidCone(axisBase, axisHeight, 8, 2);
-    glPopMatrix();
 }
 
 void drawFloor() {
