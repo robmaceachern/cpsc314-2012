@@ -24,6 +24,7 @@
 #include <Primitives.h>
 #include <FileParser.h>
 #include <sys/time.h>
+#include <sstream>
 
 using namespace cimg_library;
 using namespace std;
@@ -36,8 +37,8 @@ using namespace std;
 //////////////////////////////////////////////////////////////////
 
 // time increment between calls to idle() in ms,
-// currently set to 30 FPS
-float dt = 1000.0f*1.0f/30.0f;
+// currently set to 50 FPS
+float dt = 1000.0f*1.0f/50.0f;
 
 // flag to indicate that we should clean up and exit
 bool quit = false;
@@ -45,14 +46,11 @@ bool quit = false;
 // display width and height
 int dispWidth=1440, dispHeight=1024;
 
-int cameraMode = 1; // 1 is overhead, 2 is paddleview
+// 1 is overhead, 2 is paddleview
+int cameraMode = 1;
 
-void drawAxis();
 void drawFloor();
-void positionCamera();
 void gl_select(int x, int y);
-void gl_draw();
-void draw_block(float x, float y, float z);
 
 vector<Block> blockVector;
 
@@ -72,45 +70,28 @@ int totalPaddleHits = 0;
 int gameState = 0;
 
 GLfloat no_mat[] = { 0.0, 0.0, 0.0, 1.0 };
-GLfloat mat_ambient[] = { 0.7, 0.7, 0.7, 1.0 };
-GLfloat mat_ambient_color[] = { 0.8, 0.8, 0.2, 1.0 };
-GLfloat mat_diffuse[] = { 0.1, 0.5, 0.8, 1.0 };
-GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
-GLfloat no_shininess[] = { 0.0 };
-GLfloat low_shininess[] = { 5.0 };
-GLfloat high_shininess[] = { 100.0 };
-GLfloat mat_emission[] = {0.3, 0.2, 0.2, 0.0};
-
 GLfloat ambient[] = {0.19225, 0.19225, 0.19225};
 GLfloat diffuse[] = {0.50754, 0.50754, 0.50754};
 GLfloat specular[] = {0.508273, 0.508273, 0.508273};
 GLfloat shininess[] = {0.4 * 128};
 
-/*  Create checkerboard texture  */
-#define checkImageWidth 64
-#define checkImageHeight 64
-static GLubyte checkImage[checkImageHeight][checkImageWidth][4];
-static GLuint texName;
-uint8_t *data;
+static GLuint blockTex;
+static GLuint floorTex;
+static GLuint paddleTex;
 
 time_t startOfSample = time(NULL);
 timeval start;
 int numFrames = 1;
+float fps = 30.0;
 
-void makeCheckImage(void)
+void loadTexture(string filePath, GLuint* texName)
 {
-    // XCode users, uncomment the following line and replace *path_to_convert* with 
-    // the output of the command "which convert" run from the command line.
     cimg::imagemagick_path( "/usr/local/bin/convert" );
 
-    CImg<uint8_t> tex("metal-tex2.bmp");
+    CImg<uint8_t> tex(filePath.c_str());
     //tex.resize( 1024, 1024 );
 
-    // resize to power-of-two if image is not already correctly sized
-    // tex.resize( 1024, 1024 );
-
-    // EDIT: added uint8_t* to declaration of data variable to fix compile error
-    data = new uint8_t[ tex.width()*tex.height()*tex.spectrum() ];
+    uint8_t *data = new uint8_t[ tex.width()*tex.height()*tex.spectrum() ];
     int pos = 0;
     for( int i=0; i<tex.height(); i++ ){
         for( int j=0; j<tex.width(); j++ ){
@@ -119,32 +100,31 @@ void makeCheckImage(void)
             }
         }
     }
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, texName);
+    glBindTexture(GL_TEXTURE_2D, *texName);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex.width(), tex.height(), 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
 }
-
-
-
-// AUX_RGBImageRec* LoadBMP(char* Filename)            // Loads A Bitmap Image
-// {
-//     //FILE *File=NULL;                    // File Handle
- 
-//     if (!Filename)                      // Make Sure A Filename Was Given
-//     {
-//         return NULL;                    // If Not Return NULL
-//     }
- 
-//     FILE File=fopen(Filename,"r");               // Check To See If The File Exists
- 
-//     if (File)                       // Does The File Exist?
-//     {
-//         fclose(File);                   // Close The Handle
-//         return auxDIBImageLoad(Filename);       // Load The Bitmap And Return A Pointer
-//     }
-//     return NULL;                        // If Load Failed Return NULL
-// }
 
 void drawCube() {
     glutSolidCube(1);
 }
+
+void setOrthographicProjection() {
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+       gluOrtho2D(0, dispWidth, 0, dispHeight);
+    glScalef(1, -1, 1);
+    glTranslatef(0, -dispHeight, 0);
+    glMatrixMode(GL_MODELVIEW);
+} 
 
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
@@ -153,32 +133,30 @@ void drawCube() {
 //////////////////////////////////////////////////////////////////
 
 void init(){
-    printf("what's up init?\n");
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glViewport(0, 0, dispWidth, dispHeight);
  
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    //positionCamera();
     gluPerspective(70.0, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.0001, 1000.0);
  
     glMatrixMode(GL_MODELVIEW);
 }
 
-// free any allocated objects and return
-void cleanup(){
-
-}
-
-
-void doUpArrowPushed()
+void doSpaceBarPush()
 {
     if (gameState == 0) {
         // put the ball in motion
-        ball.deltaX = 0.09;
-        ball.deltaY = 0.16;
+        ball.deltaX = 0.07;
+        ball.deltaY = 0.12;
         gameState = 1;
     }
+}
+
+void resetPerspectiveProjection() {
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(GL_MODELVIEW);
 }
 
 //////////////////////////////////////////////////////////////////
@@ -187,25 +165,30 @@ void doUpArrowPushed()
 //////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////
 
-// window resize callback
-void resize_callback( int width, int height ){    
-
-}
-
-void writeText(Point2D point, char* text)
+void writeText(int x, int y, string text)
 {
-
-    glPushMatrix();
-    //glLoadIdentity();    
-    glColor3f(0.5, 0.4, 1);
-
-
-    //glRasterPos2i(0, 1);
     glDisable(GL_TEXTURE_2D);
-    for( int i = 0; text[i] != '\0'; i++) {
+    glDisable(GL_LIGHTING);
+
+    setOrthographicProjection();
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glColor3f(1, 1, 1);
+
+    glRasterPos3i(x, y, 0);
+    
+    for( int i = 0; i < text.length(); i++) {
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, text[i]);  
     }
     glEnable(GL_TEXTURE_2D);
+    glEnable(GL_LIGHTING);
+    
+    resetPerspectiveProjection();
+
+    glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
 }
 
@@ -217,7 +200,7 @@ void printSegments(LineSegment* segments)
     printf("Segment[3] = (%f, %f) (%f, %f)\n", segments[3].a.x, segments[3].a.y, segments[3].b.x, segments[3].b.y);
 }
 
-void drawBlock(Block b)
+void drawBlock(Block b, bool isPaddle)
 {
     if (!b.isActive) return;
 
@@ -230,13 +213,29 @@ void drawBlock(Block b)
     glTranslatef(pos.x + (size.w / 2.0), 0.2, -(pos.y + size.h/2.0));
     glScalef(size.w, blockHeight, size.h);
 
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_TEXTURE_2D);
-    //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
     glEnable(GL_TEXTURE_GEN_S);
     glEnable(GL_TEXTURE_GEN_T);
-    glBindTexture(GL_TEXTURE_2D, texName);
+    if (!isPaddle) {
+        switch(b.hpRemaining) {
+            case 3:
+                glColor3f(0.8,0.9,0.2);
+                break;
+            case 2:
+                glColor3f(0.8,0.3,0.2);
+                break;
+            case 1:
+                glColor3f(0.8,0.1,0.1);
+                break;
+            default:
+                glColor3f(0.8,0.9,0.2);
+        }
+        glBindTexture(GL_TEXTURE_2D, blockTex);
+    } else {
+        glColor3f(0.5,0.4,0.3);
+        glBindTexture(GL_TEXTURE_2D, paddleTex);
+    }
     drawCube();
     glDisable(GL_TEXTURE_GEN_S);
     glDisable(GL_TEXTURE_GEN_T);
@@ -250,8 +249,7 @@ void drawBall(Ball b)
     glPushMatrix();
 
     glColor3f(0.5, 0.4, 1);
-    //glColor3f(1, 1, 1);
-
+    //glColor3f(1,1,1);
 
     Point2D pos = b.center;
     float radius = b.radius;
@@ -262,37 +260,10 @@ void drawBall(Ball b)
     glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
     glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
     glMaterialfv(GL_FRONT, GL_SHININESS, shininess);
-    glMaterialfv(GL_FRONT, GL_EMISSION, no_mat);
+    glMaterialfv(GL_FRONT, GL_EMISSION, ambient);
     glutSolidSphere(radius, 35, 35);
 
     glPopMatrix();
-}
-
-void drawPaddle()
-{
-    glPushMatrix();
-
-    glTranslatef(paddle->position.x, paddle->position.y, -0.2);
-    glScalef(paddle->size.w, 0.5, paddle->size.h);
-    drawCube();
-
-    glPopMatrix();
-}
-
-void positionCamera()
-{
-    gluPerspective(70.0, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.0001, 1000.0);
-    //gluPerspective( 70.0f, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.1f, 2000.0f );
-
-    // if (cameraMode == 1)
-    // {
-    //     glRotatef(60, 1, 0, 0);
-    //     glTranslatef( -5.0, -5.0, 0 );
-    //     drawAxis();
-    // } else if (cameraMode == 2) {
-    //     glTranslatef(-(paddle->position.x + (paddle->size.w/2.0)), -1.5, -1.5);
-    //     drawAxis();
-    // }
 }
 
 bool checkAndHandleIntersection(Ball* ball, Block* b)
@@ -340,7 +311,6 @@ void updateBallPositionAndVelocity()
 {
     // ball will be drawn immediately following this function
 
-
     // update position
     ball.center.x += ball.deltaX;
     ball.center.y += ball.deltaY;
@@ -361,10 +331,8 @@ void updateBallPositionAndVelocity()
             ball.deltaY *= 1.2;
             ball.deltaX *= 1.2;
             totalPaddleHits = 0;
-            printf("ball speed increased! (%f, %f)\n", ball.deltaX, ball.deltaY);
         }
     }
-    // TODO add some paddle spin?
 
     float xRightWall = 10;
     float xLeftWall = 0;
@@ -380,8 +348,8 @@ void updateBallPositionAndVelocity()
     }
 
     if (ball.center.y - ball.radius < zBottomWall) {
-        printf("You died!\n");
         if (livesRemaining > 0) {
+            livesRemaining--;
             gameState = 0;
         } else {
             gameState = 3;
@@ -402,75 +370,10 @@ void keyboardCallback( unsigned char key, int x, int y ){
             cameraMode = 2;
             break;
         case ' ': //spacebar
-            doUpArrowPushed();
+            doSpaceBarPush();
         default:
             break;
     }
-}
-
-
-// display callback
-void displayCallback( void ){
-    //int current_window;
-    
-    // retrieve the currently active window
-    //current_window = glutGetWindow();
-    
-    // clear the color and depth buffers
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
- 
-    /////////////////////////////////////////////////////////////
-    /// TODO: Put your rendering code here! /////////////////////
-    /////////////////////////////////////////////////////////////
-    // glMatrixMode(GL_PROJECTION);
-    // glLoadIdentity();
-    // gluPerspective( 70.0f, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.1f, 2000.0f );
-
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    positionCamera();    
-
-    //writeText(Point2D(1,1), "Hello!");
-
-    if (gameState == 1) {
-        updateBallPositionAndVelocity();    
-    } else if (gameState == 0) {
-        // draw ball in middle of paddle
-        ball.center.x = paddle->position.x + (paddle->size.w)/2.0;
-        ball.center.y = paddle->position.y + paddle->size.h + ball.radius;
-    }
-    
-
-    drawBall(ball);
-
-    //drawPaddle();
-    drawBlock(*paddle);
-
-    int i;
-    for (i = 0; i < blockVector.size(); i++)
-    {
-        drawBlock(blockVector[i]);   
-    }
-
-    drawFloor();
-    // swap the front and back buffers to display the scene
-    //glutSetWindow( current_window );
-    glutSwapBuffers();
-    if (numFrames >= 15) {
-
-        //http://stackoverflow.com/questions/2150291/how-do-i-measure-a-time-interval-in-c
-        timeval now;
-        gettimeofday(&now, NULL);
-        double elapsedTime = elapsedTime = (now.tv_sec - start.tv_sec) * 1000.0;
-        elapsedTime += (now.tv_usec - start.tv_usec) / 1000.0;
-        //printf ("FPS: %f.\n", numFrames/ (elapsedTime/1000));
-        start = now;
-        numFrames = 0;
-    }
-    numFrames++;
-
 }
 
 
@@ -482,9 +385,6 @@ void idle( int value ){
     // function without resetting the timer or triggering
     // a display update
     if( quit ){
-        // cleanup any allocated memory
-        cleanup();
-        
         // perform hard exit of the program, since glutMainLoop()
         // will never return
         exit(0);
@@ -518,33 +418,23 @@ void drawAxis() {
 void drawFloor() {
     // Draw a floor. Since it is transparent, we need to do it AFTER all of
     // the opaque objects.
-    for (int x = 0; x < 10; x++) {
-        for (int y = 0; y < 10; y++) {
-            glColor4f(1, 1, 1, (x + y) % 2 ? 0.75 : 0.5);
-            glNormal3f(0, 1, 0);
-            glBegin(GL_POLYGON);
-            glVertex3f(x    , 0, (-y)    );
-            glVertex3f(x + 1, 0, (-y)    );
-            glVertex3f(x + 1, 0, -(y + 1));
-            glVertex3f(x    , 0, -(y + 1));
-            glEnd();
-        }
-    }
-    // visible from initial side angle
-    glBegin(GL_POLYGON);
-    glVertex3f(0,    0, 0);
-    glVertex3f(0, -.05, 0);
-    glVertex3f( 10, -.05, 0);
-    glVertex3f( 10,    0, 0);
-    glEnd();
     
-    // visible from front angle
-    glBegin(GL_POLYGON);
-    glVertex3f(0,    0, 0);
-    glVertex3f(0, -.05, 0);
-    glVertex3f(0, -.05, 10);
-    glVertex3f(0,    0, 10);
-    glEnd();
+    glPushMatrix();
+
+    glColor3f(1.0, 1.0, 1.0);
+    glScalef(10, 1, 10);
+    glTranslatef(0.5, -0.5, -0.5);
+
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_GEN_S);
+    glEnable(GL_TEXTURE_GEN_T);
+    glBindTexture(GL_TEXTURE_2D, floorTex);
+    drawCube();
+    glDisable(GL_TEXTURE_GEN_S);
+    glDisable(GL_TEXTURE_GEN_T);
+    glDisable(GL_TEXTURE_2D);
+
+    glPopMatrix();
 }
 
 void dumpMatrix(float* m) {
@@ -564,10 +454,8 @@ void SpecialInput(int key, int x, int y)
     switch(key)
     {
         case GLUT_KEY_UP:
-        doUpArrowPushed();
         break;  
         case GLUT_KEY_DOWN:
-        //do something here
         break;
         case GLUT_KEY_LEFT:
         paddle->position.x = paddle->position.x - 0.2;
@@ -609,33 +497,31 @@ void processHits2 (GLint hits, GLuint buffer[])
 }
 
 void display2(){
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
- 
-    /////////////////////////////////////////////////////////////
-    /// TODO: Put your rendering code here! /////////////////////
-    /////////////////////////////////////////////////////////////
-    // glMatrixMode(GL_PROJECTION);
-    // glLoadIdentity();
-    // gluPerspective( 70.0f, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.1f, 2000.0f );
-    //glMatrixMode(GL_PROJECTION);
-    //glLoadIdentity();
-    //positionCamera();
 
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
  
-    //glTranslatef(2.0, -2.0, -5.0);
     if (cameraMode == 1)
     {
         glRotatef(60, 1, 0, 0);
         glTranslatef( -5.0, -5.0, 0.0 );
-        drawAxis();
     } else if (cameraMode == 2) {
-        glTranslatef(-(paddle->position.x + (paddle->size.w/2.0)), -1.5, -1.5);
-        drawAxis();
+        glRotatef(20, 1, 0, 0);
+        glTranslatef(-(paddle->position.x + (paddle->size.w/2.0)), -2.5, -2.0);
     }
 
-    //writeText(Point2D(1,1), "Hello!");
+    stringstream ss;
+    ss << "FPS: " << fps;
+    writeText(10, 40, ss.str());
+
+    ss.str("");
+    ss << "Score: " << currentScore;
+    writeText(10, 80, ss.str());
+
+    ss.str("");
+    ss << "Lives: " << livesRemaining;
+    writeText(10, 120, ss.str());
 
     if (gameState == 1) {
         updateBallPositionAndVelocity();    
@@ -645,17 +531,16 @@ void display2(){
         ball.center.y = paddle->position.y + paddle->size.h + ball.radius;
     }
     
-
     drawBall(ball);
 
     //drawPaddle();
-    drawBlock(*paddle);
+    drawBlock(*paddle, true);
 
     int i;
     for (i = 0; i < blockVector.size(); i++)
     {
         glPushName(i);
-        drawBlock(blockVector[i]);
+        drawBlock(blockVector[i], false);
         glPopName();
     }
 
@@ -670,78 +555,13 @@ void display2(){
         gettimeofday(&now, NULL);
         double elapsedTime = elapsedTime = (now.tv_sec - start.tv_sec) * 1000.0;
         elapsedTime += (now.tv_usec - start.tv_usec) / 1000.0;
+        fps = numFrames/ (elapsedTime/1000);
         //printf ("FPS: %f.\n", numFrames/ (elapsedTime/1000));
         start = now;
         numFrames = 0;
     }
     numFrames++;
 }
-
-// source: http://content.gpwiki.org/index.php/OpenGL:Tutorials:Picking
-// void doMouseClick(int button, int state, int cursorX, int cursorY) {
-
-//     if (state == GLUT_UP) return;
-//     printf("doMouseClick x: %d, y: %d\n", cursorX, cursorY);
-
-//     int BUFSIZE = 512;
-//     int hits = 0;
-
-//     GLint viewport[4];
-//     GLuint selectBuf[BUFSIZE];
-
-//     glSelectBuffer(BUFSIZE,selectBuf);
-//     glRenderMode(GL_SELECT);
-//     glInitNames();
-//     gluPickMatrix(cursorX,viewport[3]-cursorY,
-//             5,5,viewport);
-
-//     display2();
-
-//     // glMatrixMode(GL_PROJECTION);
-//     // glPushMatrix();
-//     // glLoadIdentity();
-//     // glGetIntegerv(GL_VIEWPORT,viewport);
-    
-//     // positionCamera();
-//     // glMatrixMode(GL_MODELVIEW);
-//     // glLoadIdentity();
-//     // glInitNames();
-
-//     // int i;
-//     // for (i = 0; i < blockVector.size(); i++)
-//     // {
-//     //     glPushName(i);
-//     //     drawBlock(blockVector[i]);   
-//     //     glPopName();
-//     // }
-
-//     // returning to normal rendering mode
-//     hits = glRenderMode(GL_RENDER);
-//     if (hits != 0)
-//         processHits2(hits,selectBuf);
-// }
-void gl_draw()
- {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
- 
-    glTranslatef(0.0, 0.0, -5.0);
- 
-    glColor3f(1.0, 0.0, 0.0);
-    glLoadName(7); /* Overwrite the first name in the buffer */
-    draw_block(-0.3, 0, -2);
- 
-    glColor3f(0.0, 1.0, 0.0);
-    glLoadName(14); /* Overwrite the first name in the buffer */
-    draw_block(0, 0, -4);
- 
-    glColor3f(0.0, 0.0, 1.0);
-    glLoadName(21); /* Overwrite the first name in the buffer */
-    draw_block(0.3, 0, -6);
- 
-    glutSwapBuffers();
- }
 
 void list_hits(GLint hits, GLuint *names)
  {
@@ -920,34 +740,14 @@ int main(int argc, char **argv)
     glEnable( GL_NORMALIZE );
 
     // texture
-    makeCheckImage();
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glGenTextures(1, &texName);
-    glBindTexture(GL_TEXTURE_2D, texName);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                   GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                   GL_NEAREST);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, checkImageWidth,
-                checkImageHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
-                data);
+    loadTexture("electric.bmp", &blockTex);
+    loadTexture("floor-tile.bmp", &floorTex);
+    loadTexture("metal-tex2.bmp", &paddleTex);
 
-    // Turn on blending (for floor).
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    
     // lighting stuff
     GLfloat ambient[] = {0.3, 0.3, 0.3, 1.0};
     GLfloat diffuse[] = {0.9, 0.9, 0.9, 1.0};
-    GLfloat specular[] = {0.8, 0.8, 0.8, 1.0};
-    GLfloat position0[] = {5.0, 1.0, 1.0, 0.0};
-    glLightfv( GL_LIGHT0, GL_POSITION, position0 );
-    glLightfv( GL_LIGHT0, GL_AMBIENT, ambient );
-    glLightfv( GL_LIGHT0, GL_DIFFUSE, diffuse );
-    glLightfv( GL_LIGHT0, GL_SPECULAR, specular );
-    
+    GLfloat specular[] = {0.8, 0.8, 0.8, 1.0};    
     GLfloat position1[] = {2.0, 5.0, 0, 0.0};
     glLightfv( GL_LIGHT1, GL_POSITION, position1 );
     glLightfv( GL_LIGHT1, GL_AMBIENT, ambient );
@@ -955,7 +755,6 @@ int main(int argc, char **argv)
     glLightfv( GL_LIGHT1, GL_SPECULAR, specular );
     
     glEnable( GL_LIGHTING );
-    //glEnable( GL_LIGHT0 );
     glEnable( GL_LIGHT1 );
     glEnable( GL_COLOR_MATERIAL );
     
@@ -1067,135 +866,5 @@ int main(int argc, char **argv)
     glutMainLoop();
     
     return 0;       // never reached
-}
-
-// inversion routine originally from MESA
-bool invert_pose( float *m ){
-    float inv[16], det;
-    int i;
-
-    inv[0] = m[5] * m[10] * m[15] -
-    m[5] * m[11] * m[14] -
-    m[9] * m[6] * m[15] +
-    m[9] * m[7] * m[14] +
-    m[13] * m[6] * m[11] -
-    m[13] * m[7] * m[10];
-
-    inv[4] = -m[4] * m[10] * m[15] +
-    m[4] * m[11] * m[14] +
-    m[8] * m[6] * m[15] -
-    m[8] * m[7] * m[14] -
-    m[12] * m[6] * m[11] +
-    m[12] * m[7] * m[10];
-
-    inv[8] = m[4] * m[9] * m[15] -
-    m[4] * m[11] * m[13] -
-    m[8] * m[5] * m[15] +
-    m[8] * m[7] * m[13] +
-    m[12] * m[5] * m[11] -
-    m[12] * m[7] * m[9];
-
-    inv[12] = -m[4] * m[9] * m[14] +
-    m[4] * m[10] * m[13] +
-    m[8] * m[5] * m[14] -
-    m[8] * m[6] * m[13] -
-    m[12] * m[5] * m[10] +
-    m[12] * m[6] * m[9];
-
-    inv[1] = -m[1] * m[10] * m[15] +
-    m[1] * m[11] * m[14] +
-    m[9] * m[2] * m[15] -
-    m[9] * m[3] * m[14] -
-    m[13] * m[2] * m[11] +
-    m[13] * m[3] * m[10];
-
-    inv[5] = m[0] * m[10] * m[15] -
-    m[0] * m[11] * m[14] -
-    m[8] * m[2] * m[15] +
-    m[8] * m[3] * m[14] +
-    m[12] * m[2] * m[11] -
-    m[12] * m[3] * m[10];
-
-    inv[9] = -m[0] * m[9] * m[15] +
-    m[0] * m[11] * m[13] +
-    m[8] * m[1] * m[15] -
-    m[8] * m[3] * m[13] -
-    m[12] * m[1] * m[11] +
-    m[12] * m[3] * m[9];
-
-    inv[13] = m[0] * m[9] * m[14] -
-    m[0] * m[10] * m[13] -
-    m[8] * m[1] * m[14] +
-    m[8] * m[2] * m[13] +
-    m[12] * m[1] * m[10] -
-    m[12] * m[2] * m[9];
-
-    inv[2] = m[1] * m[6] * m[15] -
-    m[1] * m[7] * m[14] -
-    m[5] * m[2] * m[15] +
-    m[5] * m[3] * m[14] +
-    m[13] * m[2] * m[7] -
-    m[13] * m[3] * m[6];
-
-    inv[6] = -m[0] * m[6] * m[15] +
-    m[0] * m[7] * m[14] +
-    m[4] * m[2] * m[15] -
-    m[4] * m[3] * m[14] -
-    m[12] * m[2] * m[7] +
-    m[12] * m[3] * m[6];
-
-    inv[10] = m[0] * m[5] * m[15] -
-    m[0] * m[7] * m[13] -
-    m[4] * m[1] * m[15] +
-    m[4] * m[3] * m[13] +
-    m[12] * m[1] * m[7] -
-    m[12] * m[3] * m[5];
-
-    inv[14] = -m[0] * m[5] * m[14] +
-    m[0] * m[6] * m[13] +
-    m[4] * m[1] * m[14] -
-    m[4] * m[2] * m[13] -
-    m[12] * m[1] * m[6] +
-    m[12] * m[2] * m[5];
-
-    inv[3] = -m[1] * m[6] * m[11] +
-    m[1] * m[7] * m[10] +
-    m[5] * m[2] * m[11] -
-    m[5] * m[3] * m[10] -
-    m[9] * m[2] * m[7] +
-    m[9] * m[3] * m[6];
-
-    inv[7] = m[0] * m[6] * m[11] -
-    m[0] * m[7] * m[10] -
-    m[4] * m[2] * m[11] +
-    m[4] * m[3] * m[10] +
-    m[8] * m[2] * m[7] -
-    m[8] * m[3] * m[6];
-
-    inv[11] = -m[0] * m[5] * m[11] +
-    m[0] * m[7] * m[9] +
-    m[4] * m[1] * m[11] -
-    m[4] * m[3] * m[9] -
-    m[8] * m[1] * m[7] +
-    m[8] * m[3] * m[5];
-
-    inv[15] = m[0] * m[5] * m[10] -
-    m[0] * m[6] * m[9] -
-    m[4] * m[1] * m[10] +
-    m[4] * m[2] * m[9] +
-    m[8] * m[1] * m[6] -
-    m[8] * m[2] * m[5];
-
-    det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
-
-    if (det == 0)
-        return false;
-
-    det = 1.0 / det;
-
-    for (i = 0; i < 16; i++)
-        m[i] = inv[i] * det;
-
-    return true;
 }
 
