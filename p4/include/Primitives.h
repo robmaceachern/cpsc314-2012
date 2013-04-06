@@ -178,6 +178,9 @@ public:
 		this->center = Point2D(center.x, center.y);
 		this->deltaX = 0.01;
 		this->deltaY = 0.01;
+		this->red = 0.6;
+		this->green = 0.6;
+		this->blue = 0.6;
 	}
 
 	~Ball() {};
@@ -188,6 +191,9 @@ public:
 	float radius;
 	float deltaX;
 	float deltaY;
+	float red;
+	float green;
+	float blue;
 };
 
 class Primitive {

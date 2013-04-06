@@ -69,15 +69,9 @@ int totalPaddleHits = 0;
 // 3 - game over
 int gameState = 0;
 
-GLfloat no_mat[] = { 0.0, 0.0, 0.0, 1.0 };
-GLfloat ambient[] = {0.19225, 0.19225, 0.19225};
-GLfloat diffuse[] = {0.50754, 0.50754, 0.50754};
-GLfloat specular[] = {0.508273, 0.508273, 0.508273};
-GLfloat shininess[] = {0.4 * 128};
-
-static GLuint blockTex;
-static GLuint floorTex;
-static GLuint paddleTex;
+GLuint blockTex;
+GLuint floorTex;
+GLuint paddleTex;
 
 time_t startOfSample = time(NULL);
 timeval start;
@@ -125,7 +119,7 @@ void setOrthographicProjection() {
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
-       gluOrtho2D(0, dispWidth, 0, dispHeight);
+    gluOrtho2D(0, dispWidth, 0, dispHeight);
     glScalef(1, -1, 1);
     glTranslatef(0, -dispHeight, 0);
     glMatrixMode(GL_MODELVIEW);
@@ -155,6 +149,18 @@ void doSpaceBarPush()
         ball.deltaX = 0.04;
         ball.deltaY = 0.09;
         gameState = 1;
+    } else if (gameState == 3) {
+        livesRemaining = 5;
+        currentScore = 0;
+        gameState = 0;
+        // position ball to start
+        ball.center.x = paddle->position.x + (paddle->size.w)/2.0;
+        ball.center.y = paddle->position.y + paddle->size.h + ball.radius;
+        for (int i = 0; i < blockVector.size(); i++)
+        {
+            blockVector[i].isActive = true;
+            blockVector[i].hpRemaining = 3;
+        }   
     }
 }
 
@@ -164,11 +170,9 @@ void resetPerspectiveProjection() {
     glMatrixMode(GL_MODELVIEW);
 }
 
-//////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
-/// Callback Stubs ///////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
+// callbacks
+// drawing
+// positioning/collision
 
 void writeText(int x, int y, string text)
 {
@@ -195,14 +199,6 @@ void writeText(int x, int y, string text)
 
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
-}
-
-void printSegments(LineSegment* segments)
-{
-    printf("Segment[0] = (%f, %f) (%f, %f)\n", segments[0].a.x, segments[0].a.y, segments[0].b.x, segments[0].b.y);
-    printf("Segment[1] = (%f, %f) (%f, %f)\n", segments[1].a.x, segments[1].a.y, segments[1].b.x, segments[1].b.y);
-    printf("Segment[2] = (%f, %f) (%f, %f)\n", segments[2].a.x, segments[2].a.y, segments[2].b.x, segments[2].b.y);
-    printf("Segment[3] = (%f, %f) (%f, %f)\n", segments[3].a.x, segments[3].a.y, segments[3].b.x, segments[3].b.y);
 }
 
 void drawBlock(Block b, bool isPaddle)
@@ -238,7 +234,7 @@ void drawBlock(Block b, bool isPaddle)
         }
         glBindTexture(GL_TEXTURE_2D, blockTex);
     } else {
-        glColor3f(0.5,0.4,0.3);
+        glColor3f(0,0,0);
         glBindTexture(GL_TEXTURE_2D, paddleTex);
     }
     drawCube();
@@ -251,10 +247,17 @@ void drawBlock(Block b, bool isPaddle)
 
 void drawBall(Ball b)
 {
+
+    static GLfloat no_mat[] = { 0.0, 0.0, 0.0, 1.0 };
+    static GLfloat ambient[] = {0.19225, 0.19225, 0.19225};
+    static GLfloat diffuse[] = {0.50754, 0.50754, 0.50754};
+    static GLfloat specular[] = {0.508273, 0.508273, 0.508273};
+    static GLfloat shininess[] = {0.4 * 128};
+
     glDisable(GL_TEXTURE_2D);
     glPushMatrix();
 
-    glColor3f(0.6, 0.6, 0.6);
+    glColor3f(b.red, b.green, b.blue);
 
     Point2D pos = b.center;
     float radius = b.radius;
@@ -267,7 +270,7 @@ void drawBall(Ball b)
     glMaterialfv(GL_FRONT, GL_SHININESS, shininess);
     glMaterialfv(GL_FRONT, GL_EMISSION, ambient);
 
-    glPushName(22);
+    glLoadName(2); glPushName(20);
     glutSolidSphere(radius, 35, 35);
     glPopName();
 
@@ -456,34 +459,6 @@ void SpecialInput(int key, int x, int y)
         break;
     }
 }
-// source: http://www.lighthouse3d.com/opengl/picking/index.php?openglway3
-void processHits2 (GLint hits, GLuint buffer[])
-{
-   unsigned int i, j;
-   GLuint names, *ptr, minZ,*ptrNames, numberOfNames;
-
-   printf ("hits = %d\n", hits);
-   ptr = (GLuint *) buffer;
-   minZ = 0xffffffff;
-   for (i = 0; i < hits; i++) { 
-      names = *ptr;
-      ptr++;
-      if (*ptr < minZ) {
-          numberOfNames = names;
-          minZ = *ptr;
-          ptrNames = ptr+2;
-      }
-      
-      ptr += names+2;
-    }
-  printf ("The closest hit names are ");
-  ptr = ptrNames;
-  for (j = 0; j < numberOfNames; j++,ptr++) {
-     printf ("%d ", *ptr);
-  }
-  printf ("\n");
-   
-}
 
 void display2(){
 
@@ -518,6 +493,12 @@ void display2(){
     ss.str("");
     ss << "Lives: " << livesRemaining;
     writeText(10, 120, ss.str());
+
+    if (gameState == 3) {
+        ss.str("");
+        ss << "Game Over! Push spacebar to play again. You are awesome!";
+        writeText(10, 1000, ss.str());
+    }
 
     if (gameState == 1) {
         updateBallPositionAndVelocity();    
@@ -557,157 +538,95 @@ void display2(){
     numFrames++;
 }
 
-void list_hits(GLint hits, GLuint *names)
- {
-    int i;
- 
-    /*
-        For each hit in the buffer are allocated 4 bytes:
-        1. Number of hits selected (always one,
-                                    beacuse when we draw each object
-                                    we use glLoadName, so we replace the
-                                    prevous name in the stack)
-        2. Min Z
-        3. Max Z
-        4. Name of the hit (glLoadName)
-    */
- 
-    printf("%d hits:\n", hits);
- 
-    for (i = 0; i < hits; i++)
-        printf( "Number: %d\n"
-                "Min Z: %d\n"
-                "Max Z: %d\n"
-                "Name on stack: %d\n",
-                (GLubyte)names[i * 4],
-                (GLubyte)names[i * 4 + 1],
-                (GLubyte)names[i * 4 + 2],
-                (GLubyte)names[i * 4 + 3]
-                );
- 
-    printf("\n");
-}
-
- void mousedw(int x, int y, int but)
- {
+void mousedw(int x, int y, int but)
+{
     printf("Mouse button %d pressed at %d %d\n", but, x, y);
-    gl_select(x,dispHeight-y); //Important: gl (0,0) ist bottom left but window coords (0,0) are top left so we have to change this!
- }
+    for (int i = 0; i < 100; i++){
+        gl_select(x,dispHeight-y); //Important: gl (0,0) ist bottom left but window coords (0,0) are top left so we have to change this!
+    }
+}
 
 void mouseClick(int button, int state, int x, int y)
  {
-    if  ((button == GLUT_LEFT_BUTTON) && (state == GLUT_DOWN))
-    {
+    if  ((button == GLUT_LEFT_BUTTON) && (state == GLUT_DOWN)) {
         mousedw(x, y, button);
     }
- }
+}
 
-void draw_block(float x, float y, float z)
- {
-    glPushMatrix();
-        glTranslatef(x, y, z);
-        glutSolidCube(1.0);
-    glPopMatrix();
- }
+void processHits( GLint hits, GLuint nameBuffer[] )
+{
+    unsigned int i;
+    unsigned int j;
+    GLuint names;
+    GLuint* pPtr;
 
-void gl_selall(GLint hits, GLuint *buff)
- {
-    GLuint *p;
-    int i;
- 
-    display2();
- 
-    p = buff;
-    for (i = 0; i < 6 * 4; i++)
-    {
-        printf("Slot %d: - Value: %d\n", i, p[i]);
+    printf( "hits = %d\n", hits );
+    pPtr = nameBuffer;
+
+    if (hits == 3) {
+        ball.red = (rand() % 100) / 100.0;
+        ball.green = (rand() % 100) / 100.0;
+        ball.blue = (rand() % 100) / 100.0;
     }
- 
-    printf("Buff size: %x\n", (GLbyte)buff[0]);
- }
+
+    for( i = 0; i < hits; ++i )
+    {
+        names = *pPtr;
+        printf("number of names for hit = %u\n", names);
+        ++pPtr;
+
+        printf( "min depth = %f\t", *pPtr/(pow(2.0,32.0)-1.0) );
+        ++pPtr;
+
+        printf( "max depth = %f\n", *pPtr/(pow(2.0,32.0)-1.0) );
+        ++pPtr;
+
+        printf("Names:\t");
+        for( j = 0; j < names; ++j, ++pPtr )
+        {
+            printf( "%u\t", *pPtr );
+        }
+        printf("\n\n");     
+    }
+    printf("\n\n");  
+}
 
 void gl_select(int x, int y)
 {
-    GLuint buff[64];
+    GLuint buff[50];
     GLint hits, view[4];
     int id;
- 
-    /*
-        This choose the buffer where store the values for the selection data
-    */
-    glSelectBuffer(64, buff);
- 
-    /*
-        This retrieve info about the viewport
-    */
-    glGetIntegerv(GL_VIEWPORT, view);
- 
-    /*
-        Switching in selecton mode
-    */
+    GLfloat projMatrix[16];
+
+    glSelectBuffer(50, buff);
     glRenderMode(GL_SELECT);
- 
-    /*
-        Clearing the name's stack
-        This stack contains all the info about the objects
-    */
+
     glInitNames();
+    glPushName(70);
+    glGetFloatv( GL_PROJECTION_MATRIX, projMatrix );
  
-    /*
-        Now fill the stack with one element (or glLoadName will generate an error)
-    */
-    //glPushName(99);
- 
-    /*
-        Now modify the vieving volume, restricting selection area around the cursor
-    */
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
-        glLoadIdentity();
- 
-        /*
-            restrict the draw to an area around the cursor
-        */
-        gluPickMatrix(x, y, 0.2, 0.2, view);
-        //gluPerspective(60, 1.0, 0.0001, 1000.0);
-        gluPerspective(70.0, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.0001, 1000.0);
-
-        /*
-            Draw the objects onto the screen
-        */
-        glMatrixMode(GL_MODELVIEW);
- 
-        /*
-            draw only the names in the stack, and fill the array
-        */
-        //glutSwapBuffers();
-        display2();
- 
-        /*
-            Do you remeber? We do pushMatrix in PROJECTION mode
-        */
-        glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
- 
-    /*
-        get number of objects drawed in that area
-        and return to render mode
-    */
-    hits = glRenderMode(GL_RENDER);
- 
-    /*
-        Print a list of the objects
-    */
-    list_hits(hits, buff);
- 
-    /*
-        uncomment this to show the whole buffer
-    */
-    
-    //gl_selall(hits, buff);
-    
- 
+    glLoadIdentity();
+    glGetIntegerv(GL_VIEWPORT, view);
+    gluPickMatrix(x, y-150, 50, 50, view);
+    glMultMatrixf( projMatrix ); /* post multiply the "current" projection matrix */
     glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    display2();
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+
+    glMatrixMode(GL_MODELVIEW);
+
+    hits = glRenderMode(GL_RENDER);
+
+    if( -1 != hits ) {
+        processHits( hits,buff);
+    } else {
+        printf("Hit selection error\n" );
+    }
 }
 
 //////////////////////////////////////////////////////////////////
@@ -752,8 +671,7 @@ int main(int argc, char **argv)
     glEnable( GL_LIGHT1 );
     glEnable( GL_COLOR_MATERIAL );
     
-    // (y + h) <= 10
-
+    // layout the level
     blockVector.push_back(Block(Point2D(0.5, 9.0), RectSize(0.45, 0.45)));
     blockVector.push_back(Block(Point2D(0.5, 8.3), RectSize(0.45, 0.45)));
     blockVector.push_back(Block(Point2D(0.5, 7.6), RectSize(0.45, 0.45)));
@@ -826,25 +744,6 @@ int main(int argc, char **argv)
     blockVector.push_back(Block(Point2D(9.0, 4.8), RectSize(0.45, 0.45)));
     blockVector.push_back(Block(Point2D(9.0, 4.1), RectSize(0.45, 0.45)));
     blockVector.push_back(Block(Point2D(9.0, 3.4), RectSize(0.45, 0.45)));
-    
-
-    // blockVector.push_back(Block(Point2D(4, 8), RectSize(2, 0.8)));
-    // blockVector.push_back(Block(Point2D(6, 8), RectSize(2, 0.8)));
-    // blockVector.push_back(Block(Point2D(0, 2), RectSize(2, 0.8)));
-    // blockVector.push_back(Block(Point2D(2, 6), RectSize(1, 0.8)));
-    // blockVector.push_back(Block(Point2D(8, 5), RectSize(2, 0.8)));
-    // blockVector.push_back(Block(Point2D(6, 7), RectSize(1, 0.8)));
-    // blockVector.push_back(Block(Point2D(5, 6), RectSize(2, 0.8)));
-    // blockVector.push_back(Block(Point2D(3, 5), RectSize(1, 0.8)));
-    // blockVector.push_back(Block(Point2D(2, 4), RectSize(4, 0.8)));
-    // blockVector.push_back(Block(Point2D(4, 8), RectSize(2, 0.8)));
-    // blockVector.push_back(Block(Point2D(6, 8), RectSize(2, 0.8)));
-    // blockVector.push_back(Block(Point2D(0, 2), RectSize(2, 0.8)));
-    // blockVector.push_back(Block(Point2D(2, 6), RectSize(1, 0.8)));
-    // blockVector.push_back(Block(Point2D(8, 5), RectSize(2, 0.8)));
-    // blockVector.push_back(Block(Point2D(6, 7), RectSize(1, 0.8)));
-    // blockVector.push_back(Block(Point2D(5, 6), RectSize(2, 0.8)));
-    // blockVector.push_back(Block(Point2D(3, 5), RectSize(1, 0.8)));
 
     // the paddle block
     Block paddleBlock = Block(Point2D(3, 0), RectSize(3, 0.4));
