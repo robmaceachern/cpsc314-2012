@@ -38,7 +38,7 @@ using namespace std;
 
 // time increment between calls to idle() in ms,
 // currently set to 50 FPS
-float dt = 1000.0f*1.0f/50.0f;
+float dt = 1000.0f*1.0f/70.0f;
 
 // flag to indicate that we should clean up and exit
 bool quit = false;
@@ -83,6 +83,11 @@ time_t startOfSample = time(NULL);
 timeval start;
 int numFrames = 1;
 float fps = 30.0;
+
+float currViewpointRotation = 30.0;
+float currViewpointTranslateX = -5;
+float currViewpointTranslateY = -5;
+float currViewpointTranslateZ = -5;
 
 void loadTexture(string filePath, GLuint* texName)
 {
@@ -147,8 +152,8 @@ void doSpaceBarPush()
 {
     if (gameState == 0) {
         // put the ball in motion
-        ball.deltaX = 0.07;
-        ball.deltaY = 0.12;
+        ball.deltaX = 0.04;
+        ball.deltaY = 0.09;
         gameState = 1;
     }
 }
@@ -262,7 +267,9 @@ void drawBall(Ball b)
     glMaterialfv(GL_FRONT, GL_SHININESS, shininess);
     glMaterialfv(GL_FRONT, GL_EMISSION, ambient);
 
+    glPushName(22);
     glutSolidSphere(radius, 35, 35);
+    glPopName();
 
     glPopMatrix();
 }
@@ -486,11 +493,18 @@ void display2(){
  
     if (cameraMode == 1)
     {
-        glRotatef(60, 1, 0, 0);
-        glTranslatef( -5.0, -5.0, 0.0 );
+        currViewpointRotation = fmin(currViewpointRotation + 0.5, 60);
+        glRotatef(currViewpointRotation, 1, 0, 0);
+
+        float progress = (currViewpointRotation / 60);
+        glTranslatef( -5.0, -5.6 * progress, 0.0 );
     } else if (cameraMode == 2) {
-        glRotatef(20, 1, 0, 0);
-        glTranslatef(-(paddle->position.x + (paddle->size.w/2.0)), -2.5, -2.0);
+
+        currViewpointRotation = fmax(currViewpointRotation - 0.5, 20);
+
+        float progress = 20 / currViewpointRotation;
+        glRotatef(currViewpointRotation, 1, 0, 0);
+        glTranslatef(-(paddle->position.x + (paddle->size.w/2.0)*progress), -2.5/progress, -2.0 * progress);
     }
 
     stringstream ss;
@@ -521,9 +535,7 @@ void display2(){
     int i;
     for (i = 0; i < blockVector.size(); i++)
     {
-        glPushName(i);
         drawBlock(blockVector[i], false);
-        glPopName();
     }
 
     drawFloor();
@@ -616,14 +628,14 @@ void gl_selall(GLint hits, GLuint *buff)
 
 void gl_select(int x, int y)
 {
-    GLuint buff[128] = {0};
+    GLuint buff[64];
     GLint hits, view[4];
     int id;
  
     /*
         This choose the buffer where store the values for the selection data
     */
-    glSelectBuffer(128, buff);
+    glSelectBuffer(64, buff);
  
     /*
         This retrieve info about the viewport
@@ -644,7 +656,7 @@ void gl_select(int x, int y)
     /*
         Now fill the stack with one element (or glLoadName will generate an error)
     */
-    glPushName(0);
+    //glPushName(99);
  
     /*
         Now modify the vieving volume, restricting selection area around the cursor
@@ -656,7 +668,7 @@ void gl_select(int x, int y)
         /*
             restrict the draw to an area around the cursor
         */
-        gluPickMatrix(x, y, 5.0, 5.0, view);
+        gluPickMatrix(x, y, 0.2, 0.2, view);
         //gluPerspective(60, 1.0, 0.0001, 1000.0);
         gluPerspective(70.0, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.0001, 1000.0);
 
@@ -668,7 +680,7 @@ void gl_select(int x, int y)
         /*
             draw only the names in the stack, and fill the array
         */
-        glutSwapBuffers();
+        //glutSwapBuffers();
         display2();
  
         /*
@@ -692,7 +704,7 @@ void gl_select(int x, int y)
         uncomment this to show the whole buffer
     */
     
-    gl_selall(hits, buff);
+    //gl_selall(hits, buff);
     
  
     glMatrixMode(GL_MODELVIEW);
@@ -849,4 +861,3 @@ int main(int argc, char **argv)
     
     return 0;       // never reached
 }
-
