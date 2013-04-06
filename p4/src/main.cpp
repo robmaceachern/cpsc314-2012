@@ -49,9 +49,6 @@ int dispWidth=1440, dispHeight=1024;
 // 1 is overhead, 2 is paddleview
 int cameraMode = 1;
 
-void drawFloor();
-void gl_select(int x, int y);
-
 vector<Block> blockVector;
 
 Ball ball = Ball(0.2, Point2D(1,1));
@@ -83,6 +80,35 @@ float currViewpointTranslateX = -5;
 float currViewpointTranslateY = -5;
 float currViewpointTranslateZ = -5;
 
+void drawFloor();
+void doSelection(int x, int y);
+void writeText(int x, int y, string text);
+void display();
+void updateBallPositionAndVelocity();
+void drawBall(Ball b);
+void drawBlock(Block b, bool isPaddle);
+void doSpaceBarPush();
+
+
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+/// Initialization/Setup and Teardown ////////////////////////////
+//////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+
+// Initialize the viewport and perspective projection
+void init(){
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glViewport(0, 0, dispWidth, dispHeight);
+ 
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(70.0, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.0001, 1000.0);
+ 
+    glMatrixMode(GL_MODELVIEW);
+}
+
+// Load the texture and associate it with texName
 void loadTexture(string filePath, GLuint* texName)
 {
     cimg::imagemagick_path( "/usr/local/bin/convert" );
@@ -111,10 +137,7 @@ void loadTexture(string filePath, GLuint* texName)
 
 }
 
-void drawCube() {
-    glutSolidCube(1);
-}
-
+// Set the projection to orthographic
 void setOrthographicProjection() {
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
@@ -125,342 +148,22 @@ void setOrthographicProjection() {
     glMatrixMode(GL_MODELVIEW);
 } 
 
-//////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
-/// Initialization/Setup and Teardown ////////////////////////////
-//////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
-
-void init(){
-    glClearColor(0.0, 0.0, 0.0, 1.0);
-    glViewport(0, 0, dispWidth, dispHeight);
- 
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective(70.0, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.0001, 1000.0);
- 
-    glMatrixMode(GL_MODELVIEW);
-}
-
-void doSpaceBarPush()
-{
-    if (gameState == 0) {
-        // put the ball in motion
-        ball.deltaX = 0.04;
-        ball.deltaY = 0.09;
-        gameState = 1;
-    } else if (gameState == 3) {
-        livesRemaining = 5;
-        currentScore = 0;
-        gameState = 0;
-        // position ball to start
-        ball.center.x = paddle->position.x + (paddle->size.w)/2.0;
-        ball.center.y = paddle->position.y + paddle->size.h + ball.radius;
-        for (int i = 0; i < blockVector.size(); i++)
-        {
-            blockVector[i].isActive = true;
-            blockVector[i].hpRemaining = 3;
-        }   
-    }
-}
-
+// Reset the projection to the original perspective projection
 void resetPerspectiveProjection() {
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
 }
 
+//
+//
 // callbacks
-// drawing
-// positioning/collision
+//
+//
 
-void writeText(int x, int y, string text)
+// The display callback, used to generate each frame
+void display()
 {
-    glDisable(GL_TEXTURE_2D);
-    glDisable(GL_LIGHTING);
-
-    setOrthographicProjection();
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-
-    glColor3f(1, 1, 1);
-
-    glRasterPos3i(x, y, 0);
-    
-    for( int i = 0; i < text.length(); i++) {
-        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, text[i]);  
-    }
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_LIGHTING);
-    
-    resetPerspectiveProjection();
-
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-}
-
-void drawBlock(Block b, bool isPaddle)
-{
-    if (!b.isActive) return;
-
-    float blockHeight = 0.4;
-    glPushMatrix();
-
-    Point2D pos = b.position;
-    RectSize size = b.size;
-
-    glTranslatef(pos.x + (size.w / 2.0), 0.2, -(pos.y + size.h/2.0));
-    glScalef(size.w, blockHeight, size.h);
-
-    glEnable(GL_TEXTURE_2D);
-
-    glEnable(GL_TEXTURE_GEN_S);
-    glEnable(GL_TEXTURE_GEN_T);
-    if (!isPaddle) {
-        switch(b.hpRemaining) {
-            case 3:
-                glColor3f(0.8,0.9,0.2);
-                break;
-            case 2:
-                glColor3f(0.8,0.3,0.2);
-                break;
-            case 1:
-                glColor3f(0.8,0.1,0.1);
-                break;
-            default:
-                glColor3f(0.8,0.9,0.2);
-        }
-        glBindTexture(GL_TEXTURE_2D, blockTex);
-    } else {
-        glColor3f(0,0,0);
-        glBindTexture(GL_TEXTURE_2D, paddleTex);
-    }
-    drawCube();
-    glDisable(GL_TEXTURE_GEN_S);
-    glDisable(GL_TEXTURE_GEN_T);
-    glDisable(GL_TEXTURE_2D);
-
-    glPopMatrix();
-}
-
-void drawBall(Ball b)
-{
-
-    static GLfloat no_mat[] = { 0.0, 0.0, 0.0, 1.0 };
-    static GLfloat ambient[] = {0.19225, 0.19225, 0.19225};
-    static GLfloat diffuse[] = {0.50754, 0.50754, 0.50754};
-    static GLfloat specular[] = {0.508273, 0.508273, 0.508273};
-    static GLfloat shininess[] = {0.4 * 128};
-
-    glDisable(GL_TEXTURE_2D);
-    glPushMatrix();
-
-    glColor3f(b.red, b.green, b.blue);
-
-    Point2D pos = b.center;
-    float radius = b.radius;
-
-    glTranslatef(pos.x, 0.35, -(pos.y));
-
-    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
-    glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
-    glMaterialfv(GL_FRONT, GL_SHININESS, shininess);
-    glMaterialfv(GL_FRONT, GL_EMISSION, ambient);
-
-    glLoadName(2); glPushName(20);
-    glutSolidSphere(radius, 35, 35);
-    glPopName();
-
-    glPopMatrix();
-}
-
-bool checkAndHandleIntersection(Ball* ball, Block* b)
-{
-    if (!b->isActive) return false;
-
-    bool intersectionOccured = false;
-
-    LineSegment segments[4] = b->segments;
-    
-    int j;
-    for (j = 0; j < 4; j++) {
-        Vec3 bounceVec;
-        bool intersect = ball->intersectsWith(segments[j], &bounceVec);
-        if (intersect) {
-
-            intersectionOccured = true;
-            LineSegment curr = segments[j];
-            if (curr.a.x == curr.b.x) {
-                // vertical segment
-                ball->deltaX = -ball->deltaX;
-            } else if (curr.a.y == curr.b.y) {
-                // horizontal segment
-                ball->deltaY = -ball->deltaY;
-            }
-
-            ball->center.x += bounceVec[0];
-            ball->center.y += bounceVec[1];
-        }
-    }
-
-    if (intersectionOccured) {
-        b->hpRemaining = b->hpRemaining - 1;
-    }
-
-    if (b->hpRemaining <= 0) {
-        b->isActive = false;
-        currentScore += 100;
-    }
-
-    return intersectionOccured;
-}
-
-void updateBallPositionAndVelocity()
-{
-    // ball will be drawn immediately following this function
-
-    // update position
-    ball.center.x += ball.deltaX;
-    ball.center.y += ball.deltaY;
-
-    // check for collisions with blocks
-    int i;
-    for (i = 0; i < blockVector.size(); i++) {
-        Block* b = &blockVector[i];
-        bool blockHit = checkAndHandleIntersection(&ball, b);
-    }
-
-    // check for collision with paddle
-    bool paddleHit = checkAndHandleIntersection(&ball, paddle);
-
-    if (paddleHit) {
-        totalPaddleHits++;
-        if (totalPaddleHits > 15) {
-            ball.deltaY *= 1.2;
-            ball.deltaX *= 1.2;
-            totalPaddleHits = 0;
-        }
-    }
-
-    float xRightWall = 10;
-    float xLeftWall = 0;
-    float zTopWall = 10;
-    float zBottomWall = 0;
-
-    if (ball.center.x + ball.radius > xRightWall || ball.center.x - ball.radius < xLeftWall) {
-        ball.deltaX = -ball.deltaX;
-    }
-
-    if (ball.center.y + ball.radius > zTopWall) {
-        ball.deltaY = -ball.deltaY;
-    }
-
-    if (ball.center.y - ball.radius < zBottomWall) {
-        if (livesRemaining > 0) {
-            livesRemaining--;
-            gameState = 0;
-        } else {
-            gameState = 3;
-        }
-    }
-}
-
-// keyboard callback
-void keyboardCallback( unsigned char key, int x, int y ){
-    switch( key ){
-        case 27:
-            quit = true;
-            break;
-        case '1':
-            cameraMode = 1;
-            break;
-        case '2':
-            cameraMode = 2;
-            break;
-        case ' ': //spacebar
-            doSpaceBarPush();
-        default:
-            break;
-    }
-}
-
-
-// not exactly a callback, but sets a timer to call itself
-// in an endless loop to update the program
-void idle( int value ){
-    
-    // if the user wants to quit the program, then exit the
-    // function without resetting the timer or triggering
-    // a display update
-    if( quit ){
-        // perform hard exit of the program, since glutMainLoop()
-        // will never return
-        exit(0);
-    }
-    
-    // set a timer to call this function again after the
-    // required number of milliseconds
-    glutPostRedisplay();
-    glutTimerFunc( dt, idle, 0 );
-}
-
-void drawFloor() {
-    // Draw a floor. Since it is transparent, we need to do it AFTER all of
-    // the opaque objects.
-    
-    glPushMatrix();
-
-    glColor3f(1.0, 1.0, 1.0);
-    glScalef(10, 1, 10);
-    glTranslatef(0.5, -0.5, -0.5);
-
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_TEXTURE_GEN_S);
-    glEnable(GL_TEXTURE_GEN_T);
-    glBindTexture(GL_TEXTURE_2D, floorTex);
-    drawCube();
-    glDisable(GL_TEXTURE_GEN_S);
-    glDisable(GL_TEXTURE_GEN_T);
-    glDisable(GL_TEXTURE_2D);
-
-    glPopMatrix();
-}
-
-void dumpMatrix(float* m) {
-
-    for (int i = 0; i < 4; i++) {
-        int base = i;
-        printf("%f \t %f \t %f \t %f \n", m[base], m[base + 4], m[base + 8], m[base + 12]);
-    }
-    printf("\n");
-}
-
-
-
-// http://www.opengl.org/discussion_boards/showthread.php/136442-what-are-the-codes-for-arrow-keys-to-use-in-glut-keyboard-callback-function
-void SpecialInput(int key, int x, int y)
-{
-    switch(key)
-    {
-        case GLUT_KEY_UP:
-        break;  
-        case GLUT_KEY_DOWN:
-        break;
-        case GLUT_KEY_LEFT:
-        paddle->position.x = paddle->position.x - 0.2;
-        paddle->updateSegments();
-        break;
-        case GLUT_KEY_RIGHT:
-        paddle->position.x = paddle->position.x + 0.2;
-        paddle->updateSegments();
-        break;
-    }
-}
-
-void display2(){
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glMatrixMode(GL_MODELVIEW);
@@ -538,22 +241,357 @@ void display2(){
     numFrames++;
 }
 
-void mousedw(int x, int y, int but)
+// Keyboard callback
+void keyboardCallback( unsigned char key, int x, int y ){
+    switch( key ){
+        case 'q':
+            quit = true;
+            break;
+        case '1':
+            cameraMode = 1;
+            break;
+        case '2':
+            cameraMode = 2;
+            break;
+        case ' ': //spacebar
+            doSpaceBarPush();
+        default:
+            break;
+    }
+}
+
+// Handles a space bar action
+void doSpaceBarPush()
+{
+    if (gameState == 0) {
+        // put the ball in motion
+        ball.deltaX = 0.04;
+        ball.deltaY = 0.09;
+        gameState = 1;
+    } else if (gameState == 3) {
+        livesRemaining = 5;
+        currentScore = 0;
+        gameState = 0;
+        // position ball to start
+        ball.center.x = paddle->position.x + (paddle->size.w)/2.0;
+        ball.center.y = paddle->position.y + paddle->size.h + ball.radius;
+        for (int i = 0; i < blockVector.size(); i++)
+        {
+            blockVector[i].isActive = true;
+            blockVector[i].hpRemaining = 3;
+        }   
+    }
+}
+
+// Sets a timer to call itself
+// in an endless loop to update the program
+void idle( int value ){
+    
+    // if the user wants to quit the program, then exit the
+    // function without resetting the timer or triggering
+    // a display update
+    if( quit ){
+        // perform hard exit of the program, since glutMainLoop()
+        // will never return
+        exit(0);
+    }
+    
+    // set a timer to call this function again after the
+    // required number of milliseconds
+    glutPostRedisplay();
+    glutTimerFunc( dt, idle, 0 );
+}
+
+// Handles the left and right arrow keys
+// http://www.opengl.org/discussion_boards/showthread.php/136442-what-are-the-codes-for-arrow-keys-to-use-in-glut-keyboard-callback-function
+void SpecialInput(int key, int x, int y)
+{
+    switch(key)
+    {
+        case GLUT_KEY_UP:
+        break;  
+        case GLUT_KEY_DOWN:
+        break;
+        case GLUT_KEY_LEFT:
+        paddle->position.x = paddle->position.x - 0.2;
+        paddle->updateSegments();
+        break;
+        case GLUT_KEY_RIGHT:
+        paddle->position.x = paddle->position.x + 0.2;
+        paddle->updateSegments();
+        break;
+    }
+}
+
+//
+//
+// drawing
+//
+//
+
+// Draws a ball at it's current position
+void drawBall(Ball b)
+{
+
+    static GLfloat no_mat[] = { 0.0, 0.0, 0.0, 1.0 };
+    static GLfloat ambient[] = {0.19225, 0.19225, 0.19225};
+    static GLfloat diffuse[] = {0.50754, 0.50754, 0.50754};
+    static GLfloat specular[] = {0.508273, 0.508273, 0.508273};
+    static GLfloat shininess[] = {0.4 * 128};
+
+    glDisable(GL_TEXTURE_2D);
+    glPushMatrix();
+
+    glColor3f(b.red, b.green, b.blue);
+
+    Point2D pos = b.center;
+    float radius = b.radius;
+
+    glTranslatef(pos.x, 0.35, -(pos.y));
+
+    glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+    glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+    glMaterialfv(GL_FRONT, GL_SHININESS, shininess);
+    glMaterialfv(GL_FRONT, GL_EMISSION, ambient);
+
+    glLoadName(2); glPushName(20);
+    glutSolidSphere(radius, 35, 35);
+    glPopName();
+
+    glPopMatrix();
+}
+
+// Draws a unit cube
+void drawCube() {
+    glutSolidCube(1);
+}
+
+// Draws a block at it current position.
+// The isPaddle flag should be set for drawing the paddle block
+void drawBlock(Block b, bool isPaddle)
+{
+    if (!b.isActive) return;
+
+    float blockHeight = 0.4;
+    glPushMatrix();
+
+    Point2D pos = b.position;
+    RectSize size = b.size;
+
+    glTranslatef(pos.x + (size.w / 2.0), 0.2, -(pos.y + size.h/2.0));
+    glScalef(size.w, blockHeight, size.h);
+
+    glEnable(GL_TEXTURE_2D);
+
+    glEnable(GL_TEXTURE_GEN_S);
+    glEnable(GL_TEXTURE_GEN_T);
+    if (!isPaddle) {
+        switch(b.hpRemaining) {
+            case 3:
+                glColor3f(0.8,0.9,0.2);
+                break;
+            case 2:
+                glColor3f(0.8,0.3,0.2);
+                break;
+            case 1:
+                glColor3f(0.8,0.1,0.1);
+                break;
+            default:
+                glColor3f(0.8,0.9,0.2);
+        }
+        glBindTexture(GL_TEXTURE_2D, blockTex);
+    } else {
+        glColor3f(0,0,0);
+        glBindTexture(GL_TEXTURE_2D, paddleTex);
+    }
+    drawCube();
+    glDisable(GL_TEXTURE_GEN_S);
+    glDisable(GL_TEXTURE_GEN_T);
+    glDisable(GL_TEXTURE_2D);
+
+    glPopMatrix();
+}
+
+// Draws the floor
+void drawFloor() {
+    // Draw a floor. Since it is transparent, we need to do it AFTER all of
+    // the opaque objects.
+    
+    glPushMatrix();
+
+    glColor3f(1.0, 1.0, 1.0);
+    glScalef(10, 1, 10);
+    glTranslatef(0.5, -0.5, -0.5);
+
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_GEN_S);
+    glEnable(GL_TEXTURE_GEN_T);
+    glBindTexture(GL_TEXTURE_2D, floorTex);
+    drawCube();
+    glDisable(GL_TEXTURE_GEN_S);
+    glDisable(GL_TEXTURE_GEN_T);
+    glDisable(GL_TEXTURE_2D);
+
+    glPopMatrix();
+}
+
+// Writes the text at the given (x,y) position on the screen
+void writeText(int x, int y, string text)
+{
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_LIGHTING);
+
+    setOrthographicProjection();
+
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+
+    glColor3f(1, 1, 1);
+
+    glRasterPos3i(x, y, 0);
+    
+    for( int i = 0; i < text.length(); i++) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, text[i]);  
+    }
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_LIGHTING);
+    
+    resetPerspectiveProjection();
+
+    glMatrixMode(GL_MODELVIEW);
+    glPopMatrix();
+}
+
+
+//
+//
+// Positioning/collision
+//
+//
+
+// Checks for intersection between the ball and block and 
+// updates ball position and block attributes if necessary
+bool checkAndHandleIntersection(Ball* ball, Block* b)
+{
+    if (!b->isActive) return false;
+
+    bool intersectionOccured = false;
+
+    LineSegment segments[4] = b->segments;
+    
+    int j;
+    for (j = 0; j < 4; j++) {
+        Vec3 bounceVec;
+        bool intersect = ball->intersectsWith(segments[j], &bounceVec);
+        if (intersect) {
+
+            intersectionOccured = true;
+            LineSegment curr = segments[j];
+            if (curr.a.x == curr.b.x) {
+                // vertical segment
+                ball->deltaX = -ball->deltaX;
+            } else if (curr.a.y == curr.b.y) {
+                // horizontal segment
+                ball->deltaY = -ball->deltaY;
+            }
+
+            ball->center.x += bounceVec[0];
+            ball->center.y += bounceVec[1];
+        }
+    }
+
+    if (intersectionOccured) {
+        b->hpRemaining = b->hpRemaining - 1;
+    }
+
+    if (b->hpRemaining <= 0) {
+        b->isActive = false;
+        currentScore += 100;
+    }
+
+    return intersectionOccured;
+}
+
+// Updates the ball position and velocity based on any collisions
+// detected between the ball and each block in the scene
+void updateBallPositionAndVelocity()
+{
+    // ball will be drawn immediately following this function
+
+    // update position
+    ball.center.x += ball.deltaX;
+    ball.center.y += ball.deltaY;
+
+    // check for collisions with blocks
+    int i;
+    for (i = 0; i < blockVector.size(); i++) {
+        Block* b = &blockVector[i];
+        bool blockHit = checkAndHandleIntersection(&ball, b);
+    }
+
+    // check for collision with paddle
+    bool paddleHit = checkAndHandleIntersection(&ball, paddle);
+
+    if (paddleHit) {
+        totalPaddleHits++;
+        if (totalPaddleHits > 15) {
+            ball.deltaY *= 1.2;
+            ball.deltaX *= 1.2;
+            totalPaddleHits = 0;
+        }
+    }
+
+    float xRightWall = 10;
+    float xLeftWall = 0;
+    float zTopWall = 10;
+    float zBottomWall = 0;
+
+    if (ball.center.x + ball.radius > xRightWall || ball.center.x - ball.radius < xLeftWall) {
+        ball.deltaX = -ball.deltaX;
+    }
+
+    if (ball.center.y + ball.radius > zTopWall) {
+        ball.deltaY = -ball.deltaY;
+    }
+
+    if (ball.center.y - ball.radius < zBottomWall) {
+        if (livesRemaining > 0) {
+            livesRemaining--;
+            gameState = 0;
+        } else {
+            gameState = 3;
+        }
+    }
+}
+
+
+//
+//
+// Picking
+//
+// 
+
+// Handles a mouse down event
+void doMouseDown(int x, int y, int but)
 {
     printf("Mouse button %d pressed at %d %d\n", but, x, y);
     for (int i = 0; i < 100; i++){
-        gl_select(x,dispHeight-y); //Important: gl (0,0) ist bottom left but window coords (0,0) are top left so we have to change this!
+        doSelection(x,dispHeight-y); //Important: gl (0,0) ist bottom left but window coords (0,0) are top left so we have to change this!
     }
 }
 
+// Handles a mouse click
 void mouseClick(int button, int state, int x, int y)
  {
     if  ((button == GLUT_LEFT_BUTTON) && (state == GLUT_DOWN)) {
-        mousedw(x, y, button);
+        doMouseDown(x, y, button);
     }
 }
 
-void processHits( GLint hits, GLuint nameBuffer[] )
+// Handles the hits detected in selection mode
+void handleHits( GLint hits, GLuint* nameBuffer )
 {
     unsigned int i;
     unsigned int j;
@@ -591,7 +629,8 @@ void processHits( GLint hits, GLuint nameBuffer[] )
     printf("\n\n");  
 }
 
-void gl_select(int x, int y)
+// Performs a selection at the given coordinates
+void doSelection(int x, int y)
 {
     GLuint buff[50];
     GLint hits, view[4];
@@ -613,7 +652,8 @@ void gl_select(int x, int y)
     glMultMatrixf( projMatrix ); /* post multiply the "current" projection matrix */
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-    display2();
+    display()
+    ;
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
@@ -623,17 +663,18 @@ void gl_select(int x, int y)
     hits = glRenderMode(GL_RENDER);
 
     if( -1 != hits ) {
-        processHits( hits,buff);
+        handleHits( hits,buff);
     } else {
         printf("Hit selection error\n" );
     }
 }
 
-//////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
-/// Program Entry Point //////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
-//////////////////////////////////////////////////////////////////
+
+//
+//
+// Entry point
+//
+//
 
 int main(int argc, char **argv)
 {
@@ -644,7 +685,8 @@ int main(int argc, char **argv)
     glutCreateWindow( "Wall Buster" );
     
     // register display callback
-    glutDisplayFunc( display2 );
+    glutDisplayFunc( display )
+    ;
     glutKeyboardFunc( keyboardCallback );
     glutSpecialFunc(SpecialInput);
     glutMouseFunc(mouseClick);

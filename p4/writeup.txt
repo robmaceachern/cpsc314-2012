@@ -38,6 +38,7 @@ Left & right arrows: move the paddle from side-to-size
 #1 key: switch to overhead view (default)
 #2 key: switch to paddle view - an alternate way to play the classic game!
 Mouse click on ball: click the ball to change the ball to a random colour
+Q key: Quit
 
 Sources:
 
