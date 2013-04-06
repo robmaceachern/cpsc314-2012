@@ -49,6 +49,10 @@ int cameraMode = 1; // 1 is overhead, 2 is paddleview
 
 void drawAxis();
 void drawFloor();
+void positionCamera();
+void gl_select(int x, int y);
+void gl_draw();
+void draw_block(float x, float y, float z);
 
 vector<Block> blockVector;
 
@@ -149,7 +153,16 @@ void drawCube() {
 //////////////////////////////////////////////////////////////////
 
 void init(){
-    
+    printf("what's up init?\n");
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glViewport(0, 0, dispWidth, dispHeight);
+ 
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    //positionCamera();
+    gluPerspective(70.0, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.0001, 1000.0);
+ 
+    glMatrixMode(GL_MODELVIEW);
 }
 
 // free any allocated objects and return
@@ -268,15 +281,18 @@ void drawPaddle()
 
 void positionCamera()
 {
-    if (cameraMode == 1)
-    {
-        glRotatef(60, 1, 0, 0);
-        glTranslatef( -5.0, -5.0, 0 );
-        drawAxis();
-    } else if (cameraMode == 2) {
-        glTranslatef(-(paddle->position.x + (paddle->size.w/2.0)), -1.5, -1.5);
-        drawAxis();
-    }
+    gluPerspective(70.0, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.0001, 1000.0);
+    //gluPerspective( 70.0f, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.1f, 2000.0f );
+
+    // if (cameraMode == 1)
+    // {
+    //     glRotatef(60, 1, 0, 0);
+    //     glTranslatef( -5.0, -5.0, 0 );
+    //     drawAxis();
+    // } else if (cameraMode == 2) {
+    //     glTranslatef(-(paddle->position.x + (paddle->size.w/2.0)), -1.5, -1.5);
+    //     drawAxis();
+    // }
 }
 
 bool checkAndHandleIntersection(Ball* ball, Block* b)
@@ -406,11 +422,13 @@ void displayCallback( void ){
     /////////////////////////////////////////////////////////////
     /// TODO: Put your rendering code here! /////////////////////
     /////////////////////////////////////////////////////////////
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    gluPerspective( 70.0f, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.1f, 2000.0f );
+    // glMatrixMode(GL_PROJECTION);
+    // glLoadIdentity();
+    // gluPerspective( 70.0f, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.1f, 2000.0f );
 
     glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     positionCamera();    
 
@@ -447,7 +465,7 @@ void displayCallback( void ){
         gettimeofday(&now, NULL);
         double elapsedTime = elapsedTime = (now.tv_sec - start.tv_sec) * 1000.0;
         elapsedTime += (now.tv_usec - start.tv_usec) / 1000.0;
-        printf ("FPS: %f.\n", numFrames/ (elapsedTime/1000));
+        //printf ("FPS: %f.\n", numFrames/ (elapsedTime/1000));
         start = now;
         numFrames = 0;
     }
@@ -538,135 +556,7 @@ void dumpMatrix(float* m) {
     printf("\n");
 }
 
-// inversion routine originally from MESA
-bool invert_pose( float *m ){
-    float inv[16], det;
-    int i;
 
-    inv[0] = m[5] * m[10] * m[15] -
-    m[5] * m[11] * m[14] -
-    m[9] * m[6] * m[15] +
-    m[9] * m[7] * m[14] +
-    m[13] * m[6] * m[11] -
-    m[13] * m[7] * m[10];
-
-    inv[4] = -m[4] * m[10] * m[15] +
-    m[4] * m[11] * m[14] +
-    m[8] * m[6] * m[15] -
-    m[8] * m[7] * m[14] -
-    m[12] * m[6] * m[11] +
-    m[12] * m[7] * m[10];
-
-    inv[8] = m[4] * m[9] * m[15] -
-    m[4] * m[11] * m[13] -
-    m[8] * m[5] * m[15] +
-    m[8] * m[7] * m[13] +
-    m[12] * m[5] * m[11] -
-    m[12] * m[7] * m[9];
-
-    inv[12] = -m[4] * m[9] * m[14] +
-    m[4] * m[10] * m[13] +
-    m[8] * m[5] * m[14] -
-    m[8] * m[6] * m[13] -
-    m[12] * m[5] * m[10] +
-    m[12] * m[6] * m[9];
-
-    inv[1] = -m[1] * m[10] * m[15] +
-    m[1] * m[11] * m[14] +
-    m[9] * m[2] * m[15] -
-    m[9] * m[3] * m[14] -
-    m[13] * m[2] * m[11] +
-    m[13] * m[3] * m[10];
-
-    inv[5] = m[0] * m[10] * m[15] -
-    m[0] * m[11] * m[14] -
-    m[8] * m[2] * m[15] +
-    m[8] * m[3] * m[14] +
-    m[12] * m[2] * m[11] -
-    m[12] * m[3] * m[10];
-
-    inv[9] = -m[0] * m[9] * m[15] +
-    m[0] * m[11] * m[13] +
-    m[8] * m[1] * m[15] -
-    m[8] * m[3] * m[13] -
-    m[12] * m[1] * m[11] +
-    m[12] * m[3] * m[9];
-
-    inv[13] = m[0] * m[9] * m[14] -
-    m[0] * m[10] * m[13] -
-    m[8] * m[1] * m[14] +
-    m[8] * m[2] * m[13] +
-    m[12] * m[1] * m[10] -
-    m[12] * m[2] * m[9];
-
-    inv[2] = m[1] * m[6] * m[15] -
-    m[1] * m[7] * m[14] -
-    m[5] * m[2] * m[15] +
-    m[5] * m[3] * m[14] +
-    m[13] * m[2] * m[7] -
-    m[13] * m[3] * m[6];
-
-    inv[6] = -m[0] * m[6] * m[15] +
-    m[0] * m[7] * m[14] +
-    m[4] * m[2] * m[15] -
-    m[4] * m[3] * m[14] -
-    m[12] * m[2] * m[7] +
-    m[12] * m[3] * m[6];
-
-    inv[10] = m[0] * m[5] * m[15] -
-    m[0] * m[7] * m[13] -
-    m[4] * m[1] * m[15] +
-    m[4] * m[3] * m[13] +
-    m[12] * m[1] * m[7] -
-    m[12] * m[3] * m[5];
-
-    inv[14] = -m[0] * m[5] * m[14] +
-    m[0] * m[6] * m[13] +
-    m[4] * m[1] * m[14] -
-    m[4] * m[2] * m[13] -
-    m[12] * m[1] * m[6] +
-    m[12] * m[2] * m[5];
-
-    inv[3] = -m[1] * m[6] * m[11] +
-    m[1] * m[7] * m[10] +
-    m[5] * m[2] * m[11] -
-    m[5] * m[3] * m[10] -
-    m[9] * m[2] * m[7] +
-    m[9] * m[3] * m[6];
-
-    inv[7] = m[0] * m[6] * m[11] -
-    m[0] * m[7] * m[10] -
-    m[4] * m[2] * m[11] +
-    m[4] * m[3] * m[10] +
-    m[8] * m[2] * m[7] -
-    m[8] * m[3] * m[6];
-
-    inv[11] = -m[0] * m[5] * m[11] +
-    m[0] * m[7] * m[9] +
-    m[4] * m[1] * m[11] -
-    m[4] * m[3] * m[9] -
-    m[8] * m[1] * m[7] +
-    m[8] * m[3] * m[5];
-
-    inv[15] = m[0] * m[5] * m[10] -
-    m[0] * m[6] * m[9] -
-    m[4] * m[1] * m[10] +
-    m[4] * m[2] * m[9] +
-    m[8] * m[1] * m[6] -
-    m[8] * m[2] * m[5];
-
-    det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
-
-    if (det == 0)
-        return false;
-
-    det = 1.0 / det;
-
-    for (i = 0; i < 16; i++)
-        m[i] = inv[i] * det;
-
-    return true;
-}
 
 // http://www.opengl.org/discussion_boards/showthread.php/136442-what-are-the-codes-for-arrow-keys-to-use-in-glut-keyboard-callback-function
 void SpecialInput(int key, int x, int y)
@@ -689,31 +579,321 @@ void SpecialInput(int key, int x, int y)
         break;
     }
 }
+// source: http://www.lighthouse3d.com/opengl/picking/index.php?openglway3
+void processHits2 (GLint hits, GLuint buffer[])
+{
+   unsigned int i, j;
+   GLuint names, *ptr, minZ,*ptrNames, numberOfNames;
 
-void doMouseClick(int button, int state, int x, int y) {
-    printf("doMouseClick x: %d, y: %d\n", x, y);
+   printf ("hits = %d\n", hits);
+   ptr = (GLuint *) buffer;
+   minZ = 0xffffffff;
+   for (i = 0; i < hits; i++) { 
+      names = *ptr;
+      ptr++;
+      if (*ptr < minZ) {
+          numberOfNames = names;
+          minZ = *ptr;
+          ptrNames = ptr+2;
+      }
+      
+      ptr += names+2;
+    }
+  printf ("The closest hit names are ");
+  ptr = ptrNames;
+  for (j = 0; j < numberOfNames; j++,ptr++) {
+     printf ("%d ", *ptr);
+  }
+  printf ("\n");
+   
+}
 
-    GLint viewport[4];
+void display2(){
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+ 
+    /////////////////////////////////////////////////////////////
+    /// TODO: Put your rendering code here! /////////////////////
+    /////////////////////////////////////////////////////////////
+    // glMatrixMode(GL_PROJECTION);
+    // glLoadIdentity();
+    // gluPerspective( 70.0f, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.1f, 2000.0f );
+    //glMatrixMode(GL_PROJECTION);
+    //glLoadIdentity();
+    //positionCamera();
 
-    int BUFSIZE = 512;
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+ 
+    //glTranslatef(2.0, -2.0, -5.0);
+    if (cameraMode == 1)
+    {
+        glRotatef(60, 1, 0, 0);
+        glTranslatef( -5.0, -5.0, 0.0 );
+        drawAxis();
+    } else if (cameraMode == 2) {
+        glTranslatef(-(paddle->position.x + (paddle->size.w/2.0)), -1.5, -1.5);
+        drawAxis();
+    }
 
-    glSelectBuffer(BUFSIZE,selectBuf);
+    //writeText(Point2D(1,1), "Hello!");
+
+    if (gameState == 1) {
+        updateBallPositionAndVelocity();    
+    } else if (gameState == 0) {
+        // draw ball in middle of paddle
+        ball.center.x = paddle->position.x + (paddle->size.w)/2.0;
+        ball.center.y = paddle->position.y + paddle->size.h + ball.radius;
+    }
+    
+
+    drawBall(ball);
+
+    //drawPaddle();
+    drawBlock(*paddle);
+
+    int i;
+    for (i = 0; i < blockVector.size(); i++)
+    {
+        glPushName(i);
+        drawBlock(blockVector[i]);
+        glPopName();
+    }
+
+    drawFloor();
+    // swap the front and back buffers to display the scene
+    //glutSetWindow( current_window );
+    glutSwapBuffers();
+    if (numFrames >= 15) {
+
+        //http://stackoverflow.com/questions/2150291/how-do-i-measure-a-time-interval-in-c
+        timeval now;
+        gettimeofday(&now, NULL);
+        double elapsedTime = elapsedTime = (now.tv_sec - start.tv_sec) * 1000.0;
+        elapsedTime += (now.tv_usec - start.tv_usec) / 1000.0;
+        //printf ("FPS: %f.\n", numFrames/ (elapsedTime/1000));
+        start = now;
+        numFrames = 0;
+    }
+    numFrames++;
+}
+
+// source: http://content.gpwiki.org/index.php/OpenGL:Tutorials:Picking
+// void doMouseClick(int button, int state, int cursorX, int cursorY) {
+
+//     if (state == GLUT_UP) return;
+//     printf("doMouseClick x: %d, y: %d\n", cursorX, cursorY);
+
+//     int BUFSIZE = 512;
+//     int hits = 0;
+
+//     GLint viewport[4];
+//     GLuint selectBuf[BUFSIZE];
+
+//     glSelectBuffer(BUFSIZE,selectBuf);
+//     glRenderMode(GL_SELECT);
+//     glInitNames();
+//     gluPickMatrix(cursorX,viewport[3]-cursorY,
+//             5,5,viewport);
+
+//     display2();
+
+//     // glMatrixMode(GL_PROJECTION);
+//     // glPushMatrix();
+//     // glLoadIdentity();
+//     // glGetIntegerv(GL_VIEWPORT,viewport);
+    
+//     // positionCamera();
+//     // glMatrixMode(GL_MODELVIEW);
+//     // glLoadIdentity();
+//     // glInitNames();
+
+//     // int i;
+//     // for (i = 0; i < blockVector.size(); i++)
+//     // {
+//     //     glPushName(i);
+//     //     drawBlock(blockVector[i]);   
+//     //     glPopName();
+//     // }
+
+//     // returning to normal rendering mode
+//     hits = glRenderMode(GL_RENDER);
+//     if (hits != 0)
+//         processHits2(hits,selectBuf);
+// }
+void gl_draw()
+ {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+ 
+    glTranslatef(0.0, 0.0, -5.0);
+ 
+    glColor3f(1.0, 0.0, 0.0);
+    glLoadName(7); /* Overwrite the first name in the buffer */
+    draw_block(-0.3, 0, -2);
+ 
+    glColor3f(0.0, 1.0, 0.0);
+    glLoadName(14); /* Overwrite the first name in the buffer */
+    draw_block(0, 0, -4);
+ 
+    glColor3f(0.0, 0.0, 1.0);
+    glLoadName(21); /* Overwrite the first name in the buffer */
+    draw_block(0.3, 0, -6);
+ 
+    glutSwapBuffers();
+ }
+
+void list_hits(GLint hits, GLuint *names)
+ {
+    int i;
+ 
+    /*
+        For each hit in the buffer are allocated 4 bytes:
+        1. Number of hits selected (always one,
+                                    beacuse when we draw each object
+                                    we use glLoadName, so we replace the
+                                    prevous name in the stack)
+        2. Min Z
+        3. Max Z
+        4. Name of the hit (glLoadName)
+    */
+ 
+    printf("%d hits:\n", hits);
+ 
+    for (i = 0; i < hits; i++)
+        printf( "Number: %d\n"
+                "Min Z: %d\n"
+                "Max Z: %d\n"
+                "Name on stack: %d\n",
+                (GLubyte)names[i * 4],
+                (GLubyte)names[i * 4 + 1],
+                (GLubyte)names[i * 4 + 2],
+                (GLubyte)names[i * 4 + 3]
+                );
+ 
+    printf("\n");
+}
+
+ void mousedw(int x, int y, int but)
+ {
+    printf("Mouse button %d pressed at %d %d\n", but, x, y);
+    gl_select(x,dispHeight-y); //Important: gl (0,0) ist bottom left but window coords (0,0) are top left so we have to change this!
+ }
+
+void mouseClick(int button, int state, int x, int y)
+ {
+    if  ((button == GLUT_LEFT_BUTTON) && (state == GLUT_DOWN))
+    {
+        mousedw(x, y, button);
+    }
+ }
+
+void draw_block(float x, float y, float z)
+ {
+    glPushMatrix();
+        glTranslatef(x, y, z);
+        glutSolidCube(1.0);
+    glPopMatrix();
+ }
+
+void gl_selall(GLint hits, GLuint *buff)
+ {
+    GLuint *p;
+    int i;
+ 
+    display2();
+ 
+    p = buff;
+    for (i = 0; i < 6 * 4; i++)
+    {
+        printf("Slot %d: - Value: %d\n", i, p[i]);
+    }
+ 
+    printf("Buff size: %x\n", (GLbyte)buff[0]);
+ }
+
+void gl_select(int x, int y)
+{
+    GLuint buff[128] = {0};
+    GLint hits, view[4];
+    int id;
+ 
+    /*
+        This choose the buffer where store the values for the selection data
+    */
+    glSelectBuffer(128, buff);
+ 
+    /*
+        This retrieve info about the viewport
+    */
+    glGetIntegerv(GL_VIEWPORT, view);
+ 
+    /*
+        Switching in selecton mode
+    */
     glRenderMode(GL_SELECT);
-
+ 
+    /*
+        Clearing the name's stack
+        This stack contains all the info about the objects
+    */
+    glInitNames();
+ 
+    /*
+        Now fill the stack with one element (or glLoadName will generate an error)
+    */
+    glPushName(0);
+ 
+    /*
+        Now modify the vieving volume, restricting selection area around the cursor
+    */
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
-    glLoadIdentity();
-    glGetIntegerv(GL_VIEWPORT,viewport);
-    gluPickMatrix(cursorX,viewport[3]-cursorY,
-            5,5,viewport);
-    gluPerspective(45,ratio,0.1,1000);
-    glMatrixMode(GL_MODELVIEW);
-    glInitNames();
+        glLoadIdentity();
+ 
+        /*
+            restrict the draw to an area around the cursor
+        */
+        gluPickMatrix(x, y, 5.0, 5.0, view);
+        //gluPerspective(60, 1.0, 0.0001, 1000.0);
+        gluPerspective(70.0, float(glutGet(GLUT_WINDOW_WIDTH))/float(glutGet(GLUT_WINDOW_HEIGHT)), 0.0001, 1000.0);
 
-    glInitNames(void);
-    glPushName(1);
-    drawCube();
-    glPopName();
+        /*
+            Draw the objects onto the screen
+        */
+        glMatrixMode(GL_MODELVIEW);
+ 
+        /*
+            draw only the names in the stack, and fill the array
+        */
+        glutSwapBuffers();
+        display2();
+ 
+        /*
+            Do you remeber? We do pushMatrix in PROJECTION mode
+        */
+        glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+ 
+    /*
+        get number of objects drawed in that area
+        and return to render mode
+    */
+    hits = glRenderMode(GL_RENDER);
+ 
+    /*
+        Print a list of the objects
+    */
+    list_hits(hits, buff);
+ 
+    /*
+        uncomment this to show the whole buffer
+    */
+    
+    gl_selall(hits, buff);
+    
+ 
+    glMatrixMode(GL_MODELVIEW);
 }
 
 //////////////////////////////////////////////////////////////////
@@ -731,12 +911,11 @@ int main(int argc, char **argv)
     glutCreateWindow( "Wall Buster" );
     
     // register display callback
-    glutDisplayFunc( displayCallback );
+    glutDisplayFunc( display2 );
     glutKeyboardFunc( keyboardCallback );
     glutSpecialFunc(SpecialInput);
-    glutMouseFunc(doMouseClick);
+    glutMouseFunc(mouseClick);
     
-    glViewport( 0, 0, dispWidth, dispHeight );
     glEnable( GL_DEPTH_TEST );
     glEnable( GL_NORMALIZE );
 
@@ -881,10 +1060,142 @@ int main(int argc, char **argv)
 
     idle( 0 );
 
+    init();
+
     gettimeofday(&start, NULL);
     // pass control over to GLUT
     glutMainLoop();
     
     return 0;       // never reached
+}
+
+// inversion routine originally from MESA
+bool invert_pose( float *m ){
+    float inv[16], det;
+    int i;
+
+    inv[0] = m[5] * m[10] * m[15] -
+    m[5] * m[11] * m[14] -
+    m[9] * m[6] * m[15] +
+    m[9] * m[7] * m[14] +
+    m[13] * m[6] * m[11] -
+    m[13] * m[7] * m[10];
+
+    inv[4] = -m[4] * m[10] * m[15] +
+    m[4] * m[11] * m[14] +
+    m[8] * m[6] * m[15] -
+    m[8] * m[7] * m[14] -
+    m[12] * m[6] * m[11] +
+    m[12] * m[7] * m[10];
+
+    inv[8] = m[4] * m[9] * m[15] -
+    m[4] * m[11] * m[13] -
+    m[8] * m[5] * m[15] +
+    m[8] * m[7] * m[13] +
+    m[12] * m[5] * m[11] -
+    m[12] * m[7] * m[9];
+
+    inv[12] = -m[4] * m[9] * m[14] +
+    m[4] * m[10] * m[13] +
+    m[8] * m[5] * m[14] -
+    m[8] * m[6] * m[13] -
+    m[12] * m[5] * m[10] +
+    m[12] * m[6] * m[9];
+
+    inv[1] = -m[1] * m[10] * m[15] +
+    m[1] * m[11] * m[14] +
+    m[9] * m[2] * m[15] -
+    m[9] * m[3] * m[14] -
+    m[13] * m[2] * m[11] +
+    m[13] * m[3] * m[10];
+
+    inv[5] = m[0] * m[10] * m[15] -
+    m[0] * m[11] * m[14] -
+    m[8] * m[2] * m[15] +
+    m[8] * m[3] * m[14] +
+    m[12] * m[2] * m[11] -
+    m[12] * m[3] * m[10];
+
+    inv[9] = -m[0] * m[9] * m[15] +
+    m[0] * m[11] * m[13] +
+    m[8] * m[1] * m[15] -
+    m[8] * m[3] * m[13] -
+    m[12] * m[1] * m[11] +
+    m[12] * m[3] * m[9];
+
+    inv[13] = m[0] * m[9] * m[14] -
+    m[0] * m[10] * m[13] -
+    m[8] * m[1] * m[14] +
+    m[8] * m[2] * m[13] +
+    m[12] * m[1] * m[10] -
+    m[12] * m[2] * m[9];
+
+    inv[2] = m[1] * m[6] * m[15] -
+    m[1] * m[7] * m[14] -
+    m[5] * m[2] * m[15] +
+    m[5] * m[3] * m[14] +
+    m[13] * m[2] * m[7] -
+    m[13] * m[3] * m[6];
+
+    inv[6] = -m[0] * m[6] * m[15] +
+    m[0] * m[7] * m[14] +
+    m[4] * m[2] * m[15] -
+    m[4] * m[3] * m[14] -
+    m[12] * m[2] * m[7] +
+    m[12] * m[3] * m[6];
+
+    inv[10] = m[0] * m[5] * m[15] -
+    m[0] * m[7] * m[13] -
+    m[4] * m[1] * m[15] +
+    m[4] * m[3] * m[13] +
+    m[12] * m[1] * m[7] -
+    m[12] * m[3] * m[5];
+
+    inv[14] = -m[0] * m[5] * m[14] +
+    m[0] * m[6] * m[13] +
+    m[4] * m[1] * m[14] -
+    m[4] * m[2] * m[13] -
+    m[12] * m[1] * m[6] +
+    m[12] * m[2] * m[5];
+
+    inv[3] = -m[1] * m[6] * m[11] +
+    m[1] * m[7] * m[10] +
+    m[5] * m[2] * m[11] -
+    m[5] * m[3] * m[10] -
+    m[9] * m[2] * m[7] +
+    m[9] * m[3] * m[6];
+
+    inv[7] = m[0] * m[6] * m[11] -
+    m[0] * m[7] * m[10] -
+    m[4] * m[2] * m[11] +
+    m[4] * m[3] * m[10] +
+    m[8] * m[2] * m[7] -
+    m[8] * m[3] * m[6];
+
+    inv[11] = -m[0] * m[5] * m[11] +
+    m[0] * m[7] * m[9] +
+    m[4] * m[1] * m[11] -
+    m[4] * m[3] * m[9] -
+    m[8] * m[1] * m[7] +
+    m[8] * m[3] * m[5];
+
+    inv[15] = m[0] * m[5] * m[10] -
+    m[0] * m[6] * m[9] -
+    m[4] * m[1] * m[10] +
+    m[4] * m[2] * m[9] +
+    m[8] * m[1] * m[6] -
+    m[8] * m[2] * m[5];
+
+    det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+
+    if (det == 0)
+        return false;
+
+    det = 1.0 / det;
+
+    for (i = 0; i < 16; i++)
+        m[i] = inv[i] * det;
+
+    return true;
 }
 
